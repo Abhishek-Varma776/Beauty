@@ -105,7 +105,7 @@ const rateCardServices = [
     price: 499,
     price_home: 999,
     duration_min: 30,
-    image_url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=400&q=80",
+    image_url: "http://localhost:5000/uploads/saree-draping.png",
     is_active: true
   },
   {

@@ -21,7 +21,29 @@ export const LandingPage = () => {
     const load = async () => {
       try {
         const serviceRows = await fetchActiveServices();
-        setServices(serviceRows.slice(0, 6));
+        // Curate 8 featured services to fill the grid beautifully
+        const featuredNames = [
+          "eyebrows",
+          "cleanup",
+          "pedicure",
+          "manicure",
+          "facial",
+          "hair cut",
+          "hair color",
+          "bridal makeup"
+        ];
+        const featured = serviceRows.filter(s => featuredNames.includes(s.name.trim().toLowerCase()));
+        
+        // Sort to match the curated order
+        featured.sort((a, b) => {
+          return featuredNames.indexOf(a.name.trim().toLowerCase()) - featuredNames.indexOf(b.name.trim().toLowerCase());
+        });
+
+        if (featured.length === 0) {
+          setServices(serviceRows.slice(0, 8));
+        } else {
+          setServices(featured);
+        }
       } catch {
         // silent
       }
@@ -239,77 +261,80 @@ export const LandingPage = () => {
             </motion.div>
           </div>
 
-          {!profile ? (
-            /* Teaser for non-logged-in users */
+          <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 310px), 1fr))" }}>
+            {services.map((service, index) => {
+              let activeImage = service.image_url;
+              const nameNorm = service.name.trim().toLowerCase();
+              
+              if (nameNorm === "hair color") {
+                activeImage = "http://localhost:5000/uploads/hair-color.png";
+              } else if (nameNorm === "full face threading") {
+                activeImage = "http://localhost:5000/uploads/full-face-threading.png";
+              } else if (nameNorm === "cleanup") {
+                activeImage = "http://localhost:5000/uploads/cleanup.png";
+              } else if (nameNorm === "pedicure") {
+                activeImage = "http://localhost:5000/uploads/pedicure.png";
+              } else if (nameNorm === "upper lip") {
+                activeImage = "http://localhost:5000/uploads/upper-lip.png";
+              } else if (nameNorm === "eyebrows") {
+                activeImage = "http://localhost:5000/uploads/eyebrows.png";
+              } else if (nameNorm === "manicure") {
+                activeImage = "http://localhost:5000/uploads/manicure.png";
+              } else if (nameNorm === "saree draping") {
+                activeImage = "http://localhost:5000/uploads/saree-draping.png";
+              }
+
+              const displayService = { ...service, image_url: activeImage };
+
+              return (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                >
+                  <ServiceCard
+                    service={displayService}
+                    action={
+                      <Link
+                        className="btn-primary"
+                        style={{ width: "100%", textDecoration: "none" }}
+                        to={`/book/${service.id}`}
+                      >
+                        Book Now
+                      </Link>
+                    }
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {!profile && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               style={{
+                marginTop: "3rem",
                 textAlign: "center",
-                padding: "3rem 2rem",
+                padding: "2.5rem 2rem",
                 border: "1px solid rgba(201,162,39,0.25)",
                 borderRadius: "1.5rem",
-                background: "rgba(201,162,39,0.03)",
+                background: "rgba(201,162,39,0.02)",
               }}
             >
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>👑</div>
-              <h3 style={{ color: "#c9a227", fontFamily: "'Cinzel', serif", fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-                Sign In to View Prices & Book
+              <h3 style={{ color: "#c9a227", fontFamily: "'Cinzel', serif", fontSize: "1.35rem", marginBottom: "0.5rem" }}>
+                Ready to Experience Premium Salon Care?
               </h3>
-              <p style={{ color: "#666", marginBottom: "2rem" }}>
-                Create a free account to explore all our services, prices, and book your appointment instantly.
+              <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+                Create a free account to book your appointments instantly, save history, and receive special offers.
               </p>
               <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-                <Link className="btn-primary" to="/auth/signup">Create Account</Link>
-                <Link className="btn-secondary" to="/auth/signin">Sign In</Link>
+                <Link className="btn-primary" to="/auth/signup" style={{ fontSize: "0.875rem", padding: "0.55rem 1.5rem" }}>Create Account</Link>
+                <Link className="btn-secondary" to="/auth/signin" style={{ fontSize: "0.875rem", padding: "0.55rem 1.5rem" }}>Sign In</Link>
               </div>
             </motion.div>
-          ) : (
-            <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 310px), 1fr))" }}>
-              {services.map((service, index) => {
-                let activeImage = service.image_url;
-                const nameNorm = service.name.trim().toLowerCase();
-                
-                if (nameNorm === "hair color") {
-                  activeImage = "http://localhost:5000/uploads/hair-color.png";
-                } else if (nameNorm === "full face threading") {
-                  activeImage = "http://localhost:5000/uploads/full-face-threading.png";
-                } else if (nameNorm === "cleanup") {
-                  activeImage = "http://localhost:5000/uploads/cleanup.png";
-                } else if (nameNorm === "pedicure") {
-                  activeImage = "http://localhost:5000/uploads/pedicure.png";
-                } else if (nameNorm === "upper lip") {
-                  activeImage = "http://localhost:5000/uploads/upper-lip.png";
-                } else if (nameNorm === "eyebrows") {
-                  activeImage = "http://localhost:5000/uploads/eyebrows.png";
-                }
-
-                const displayService = { ...service, image_url: activeImage };
-
-                return (
-                  <motion.div
-                    key={service.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.08 }}
-                  >
-                    <ServiceCard
-                      service={displayService}
-                      action={
-                        <Link
-                          className="btn-primary"
-                          style={{ width: "100%", textDecoration: "none" }}
-                          to={`/book/${service.id}`}
-                        >
-                          Book Now
-                        </Link>
-                      }
-                    />
-                  </motion.div>
-                );
-              })}
-            </div>
           )}
         </div>
       </section>

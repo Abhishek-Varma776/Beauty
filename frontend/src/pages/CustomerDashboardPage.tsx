@@ -280,6 +280,10 @@ export const CustomerDashboardPage = () => {
                     activeImage = "http://localhost:5000/uploads/upper-lip.png";
                   } else if (nameNorm === "eyebrows") {
                     activeImage = "http://localhost:5000/uploads/eyebrows.png";
+                  } else if (nameNorm === "manicure") {
+                    activeImage = "http://localhost:5000/uploads/manicure.png";
+                  } else if (nameNorm === "saree draping") {
+                    activeImage = "http://localhost:5000/uploads/saree-draping.png";
                   }
 
                   const displayService = {
