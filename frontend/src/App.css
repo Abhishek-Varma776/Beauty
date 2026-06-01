@@ -1,0 +1,13 @@
+/* App-level overrides — all base styles are in index.css */
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: #c9a227;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #f0c94e;
+}
