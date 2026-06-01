@@ -6,12 +6,16 @@ import { Link } from "react-router-dom";
 import { ServiceCard } from "../components/services/ServiceCard";
 import { useAuth } from "../context/AuthContext";
 import { fetchActiveServices } from "../lib/queries";
-import { customerReviews } from "../lib/seed";
 import type { Service } from "../types/domain";
 
 export const LandingPage = () => {
   const { profile } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
+
+  // Scroll to top when landing page mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -33,8 +37,8 @@ export const LandingPage = () => {
         style={{
           position: "relative",
           overflow: "hidden",
-          paddingTop: "4rem",
-          paddingBottom: "5rem",
+          paddingTop: "clamp(2.5rem, 6vw, 6rem)",
+          paddingBottom: "clamp(3rem, 7vw, 7rem)",
           background: "linear-gradient(135deg, #0a0a0a 0%, #0f0d00 40%, #0a0a0a 100%)",
         }}
       >
@@ -93,7 +97,7 @@ export const LandingPage = () => {
             </p>
 
             {/* CTA Buttons */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center", marginBottom: "2.5rem" }}>
+            <div className="cta-group" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center", marginBottom: "2.5rem" }}>
               <Link
                 className="btn-primary"
                 to={profile ? (profile.role === "admin" ? "/admin" : "/dashboard") : "/auth"}
@@ -129,8 +133,87 @@ export const LandingPage = () => {
       {/* ── Gold Divider ── */}
       <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, #c9a227, transparent)" }} />
 
+      {/* ── How It Works ── */}
+      <section style={{ padding: "clamp(2.5rem, 6vw, 5rem) 0", background: "#0d0d0d" }}>
+        <div className="section-shell">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ textAlign: "center", marginBottom: "clamp(1.5rem, 4vw, 3rem)" }}
+          >
+            <span className="badge" style={{ marginBottom: "1rem", display: "inline-block" }}>Simple Process</span>
+            <h2
+              className="text-gold-gradient"
+              style={{ fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)", fontWeight: 700, margin: "0 0 0.5rem" }}
+            >
+              How It Works
+            </h2>
+            <p style={{ color: "#555", fontSize: "clamp(0.85rem, 2vw, 0.95rem)" }}>
+              Book in 3 easy steps — beauty delivered your way
+            </p>
+          </motion.div>
+
+          <div style={{ display: "grid", gap: "clamp(1rem, 3vw, 1.5rem)", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", position: "relative" }}>
+            {/* Connecting line — desktop only */}
+            <div style={{ position: "absolute", top: "2.5rem", left: "calc(16.66% + 0.75rem)", right: "calc(16.66% + 0.75rem)", height: "1px", background: "linear-gradient(90deg, #c9a227, rgba(201,162,39,0.3), #c9a227)", zIndex: 0 }} aria-hidden="true" />
+
+            {[
+              { step: "01", emoji: "📱", title: "Create Account",   desc: "Sign up free with your mobile number in under 30 seconds." },
+              { step: "02", emoji: "📅", title: "Choose & Book",    desc: "Pick your service, date & time. Home visit or salon visit." },
+              { step: "03", emoji: "✨", title: "Get Beautified",   desc: "Our expert arrives on time. Relax and enjoy a premium experience." },
+            ].map((item, index) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                style={{ textAlign: "center", position: "relative", zIndex: 1 }}
+              >
+                {/* Step circle */}
+                <div style={{
+                  width: "clamp(52px, 8vw, 68px)",
+                  height: "clamp(52px, 8vw, 68px)",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #1a1500, #0f0d00)",
+                  border: "2px solid #c9a227",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 1rem",
+                  boxShadow: "0 0 20px rgba(201,162,39,0.2), inset 0 1px 0 rgba(201,162,39,0.1)",
+                  position: "relative",
+                }}>
+                  <span style={{ fontSize: "clamp(1.3rem, 3vw, 1.8rem)" }}>{item.emoji}</span>
+                  {/* Step number badge */}
+                  <span style={{
+                    position: "absolute", top: "-8px", right: "-8px",
+                    width: "22px", height: "22px", borderRadius: "50%",
+                    background: "linear-gradient(135deg, #c9a227, #f0c94e)",
+                    color: "#0a0a0a", fontWeight: 800, fontSize: "0.62rem",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>{item.step}</span>
+                </div>
+
+                <h3 style={{
+                  fontFamily: "'Cinzel', serif", color: "#e8d5a3",
+                  fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)", fontWeight: 700,
+                  margin: "0 0 0.5rem",
+                }}>
+                  {item.title}
+                </h3>
+                <p style={{ color: "#555", fontSize: "clamp(0.78rem, 1.8vw, 0.875rem)", lineHeight: 1.65, margin: 0, maxWidth: "200px", marginInline: "auto" }}>
+                  {item.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Gold Divider ── */}
+      <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, rgba(201,162,39,0.4), transparent)" }} />
+
       {/* ── Services / Products Section ── */}
-      <section id="services" style={{ padding: "5rem 0", background: "#0a0a0a" }}>
+      <section id="services" style={{ padding: "clamp(2.5rem, 6vw, 6rem) 0", background: "#0a0a0a" }}>
         <div className="section-shell" style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
           <div style={{ textAlign: "center" }}>
             <motion.div
@@ -183,7 +266,7 @@ export const LandingPage = () => {
               </div>
             </motion.div>
           ) : (
-            <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+            <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 310px), 1fr))" }}>
               {services.map((service, index) => {
                 let activeImage = service.image_url;
                 const nameNorm = service.name.trim().toLowerCase();
@@ -235,7 +318,7 @@ export const LandingPage = () => {
       <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, rgba(201,162,39,0.4), transparent)" }} />
 
       {/* ── Why Choose Us ── */}
-      <section style={{ padding: "5rem 0", background: "#0d0d0d" }}>
+      <section style={{ padding: "clamp(2.5rem, 6vw, 6rem) 0", background: "#0d0d0d" }}>
         <div className="section-shell">
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 className="text-gold-gradient" style={{ fontFamily: "'Cinzel', serif", fontSize: "clamp(1.6rem, 3.5vw, 2.5rem)", fontWeight: 700 }}>
@@ -287,47 +370,164 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* ── Reviews ── */}
-      <section style={{ padding: "5rem 0", background: "#0a0a0a" }}>
+      {/* ── Client Stories ── */}
+      <section style={{ padding: "clamp(2.5rem, 6vw, 6rem) 0", background: "linear-gradient(180deg, #0a0a0a 0%, #0d0b00 60%, #0a0a0a 100%)" }}>
         <div className="section-shell">
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2 className="text-gold-gradient" style={{ fontFamily: "'Cinzel', serif", fontSize: "clamp(1.6rem, 3.5vw, 2.5rem)", fontWeight: 700, margin: "0 0 0.5rem" }}>
-              Client Stories
-            </h2>
-            <p style={{ color: "#666" }}>Real experiences from our valued customers</p>
+
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: "clamp(2rem, 4vw, 3.5rem)" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="badge" style={{ marginBottom: "1rem", display: "inline-block" }}>⭐ Real Reviews</span>
+              <h2
+                className="text-gold-gradient"
+                style={{ fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: "clamp(1.6rem, 3.5vw, 2.5rem)", fontWeight: 700, margin: "0 0 0.75rem" }}
+              >
+                Client Stories
+              </h2>
+              <p style={{ color: "#666", fontSize: "clamp(0.85rem, 2vw, 1rem)", maxWidth: "400px", margin: "0 auto" }}>
+                Real experiences from our valued customers
+              </p>
+            </motion.div>
           </div>
-          <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-            {customerReviews.map((review: { author: string; text: string }, index: number) => (
+
+          {/* Review Cards */}
+          <div style={{ display: "grid", gap: "clamp(1.5rem, 3.5vw, 2.5rem)", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))" }}>
+            {[
+              { author: "Priya S.",   text: "The facial was calm, hygienic, and my skin looked fresh for days. Absolutely loved the home service!",         service: "Glow Facial",    initial: "P", accent: "#c9a227" },
+              { author: "Ananya R.",  text: "Bridal makeup at home saved so much time. The finish was beautiful and lasted the entire event!",              service: "Bridal Makeup",  initial: "A", accent: "#d4ab35" },
+              { author: "Meera K.",   text: "Easy booking and so punctual. I will definitely book the hair spa again — totally relaxing experience!",       service: "Hair Spa",       initial: "M", accent: "#b8922a" },
+            ].map((review, index) => (
               <motion.article
                 key={review.author}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="panel"
+                transition={{ duration: 0.55, delay: index * 0.12 }}
+                style={{
+                  position: "relative",
+                  padding: "clamp(1.25rem, 3vw, 1.875rem)",
+                  border: "1px solid rgba(201,162,39,0.18)",
+                  borderRadius: "1.5rem",
+                  background: "linear-gradient(145deg, #141410 0%, #100f00 100%)",
+                  boxShadow: "0 4px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(201,162,39,0.07)",
+                  transition: "box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
+                  overflow: "hidden",
+                  cursor: "default",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.boxShadow = "0 16px 48px rgba(201,162,39,0.15), 0 4px 28px rgba(0,0,0,0.5)";
+                  el.style.borderColor = "rgba(201,162,39,0.5)";
+                  el.style.transform = "translateY(-5px)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.boxShadow = "0 4px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(201,162,39,0.07)";
+                  el.style.borderColor = "rgba(201,162,39,0.18)";
+                  el.style.transform = "translateY(0)";
+                }}
               >
-                <div style={{ display: "flex", gap: "2px", marginBottom: "1rem" }}>
+                {/* Huge decorative quote */}
+                <div aria-hidden="true" style={{
+                  position: "absolute", top: "-0.5rem", right: "1rem",
+                  fontFamily: "'Georgia', 'Times New Roman', serif",
+                  fontSize: "7rem", lineHeight: 1, color: "rgba(201,162,39,0.07)",
+                  pointerEvents: "none", userSelect: "none", fontWeight: 700,
+                }}>"
+                </div>
+
+                {/* Service pill */}
+                <div style={{ marginBottom: "1rem" }}>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: "4px",
+                    padding: "0.22rem 0.7rem", borderRadius: "9999px",
+                    background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.28)",
+                    color: "#c9a227", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.09em",
+                    textTransform: "uppercase",
+                  }}>✦ {review.service}</span>
+                </div>
+
+                {/* Star rating */}
+                <div style={{ display: "flex", gap: "4px", marginBottom: "1rem" }}>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} style={{ color: "#c9a227", fill: "#c9a227" }} />
+                    <Star key={i} size={16} style={{ color: "#c9a227", fill: "#c9a227", filter: "drop-shadow(0 0 3px rgba(201,162,39,0.6))" }} />
                   ))}
                 </div>
-                <p style={{ color: "#aaa", fontStyle: "italic", lineHeight: 1.6, margin: "0 0 1rem" }}>
+
+                {/* Review text */}
+                <p style={{
+                  color: "#a89060", fontStyle: "italic", lineHeight: 1.8,
+                  margin: "0 0 1.5rem", fontSize: "clamp(0.875rem, 2vw, 0.95rem)",
+                  position: "relative", zIndex: 1,
+                }}>
                   "{review.text}"
                 </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+
+                {/* Gold separator */}
+                <div style={{ height: "1px", background: "linear-gradient(90deg, rgba(201,162,39,0.3), transparent)", marginBottom: "1.25rem" }} />
+
+                {/* Author */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
                   <div style={{
-                    width: "40px", height: "40px",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #c9a227, #8a6e1a)",
+                    width: "50px", height: "50px", borderRadius: "50%", flexShrink: 0,
+                    background: `linear-gradient(135deg, ${review.accent}, #4a3008)`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "#0a0a0a", fontWeight: 700,
+                    color: "#0a0a0a", fontWeight: 800, fontSize: "1.15rem",
+                    border: "2px solid rgba(201,162,39,0.4)",
+                    boxShadow: "0 0 14px rgba(201,162,39,0.18)",
                   }}>
-                    {review.author.charAt(0)}
+                    {review.initial}
                   </div>
-                  <p style={{ color: "#e8d5a3", fontWeight: 600, margin: 0 }}>{review.author}</p>
+                  <div>
+                    <p style={{ color: "#e8d5a3", fontWeight: 700, margin: "0 0 3px", fontSize: "0.925rem" }}>
+                      {review.author}
+                    </p>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.65rem", color: "#3ec46d", fontWeight: 600 }}>
+                      ✓ Verified Customer
+                    </span>
+                  </div>
                 </div>
               </motion.article>
             ))}
           </div>
+
+          {/* Stats bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            style={{
+              marginTop: "clamp(2rem, 4vw, 3rem)",
+              padding: "clamp(1rem, 3vw, 1.5rem) clamp(1.25rem, 4vw, 2.5rem)",
+              border: "1px solid rgba(201,162,39,0.14)",
+              borderRadius: "1.25rem",
+              background: "rgba(201,162,39,0.025)",
+              display: "flex", flexWrap: "wrap",
+              justifyContent: "center",
+              gap: "clamp(1.5rem, 5vw, 4rem)",
+              textAlign: "center",
+            }}
+          >
+            {[
+              { value: "500+",  label: "Happy Clients" },
+              { value: "4.9 ★", label: "Average Rating" },
+              { value: "10+",   label: "Years of Service" },
+              { value: "100%",  label: "Satisfaction Rate" },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <p className="text-gold-gradient" style={{ fontFamily: "'Cinzel', serif", fontSize: "clamp(1.3rem, 3.5vw, 1.9rem)", fontWeight: 700, margin: "0 0 0.25rem" }}>
+                  {stat.value}
+                </p>
+                <p style={{ color: "#555", fontSize: "clamp(0.7rem, 1.8vw, 0.78rem)", margin: 0, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </motion.div>
+
         </div>
       </section>
 
@@ -335,7 +535,7 @@ export const LandingPage = () => {
       <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, #c9a227, transparent)" }} />
 
       {/* ── Google Maps ── */}
-      <section id="location" style={{ padding: "5rem 0", background: "#0d0d0d" }}>
+      <section id="location" style={{ padding: "clamp(2.5rem, 6vw, 6rem) 0", background: "#0d0d0d" }}>
         <div className="section-shell">
           <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <span className="badge" style={{ marginBottom: "1rem", display: "inline-block" }}>Find Us</span>
@@ -379,11 +579,12 @@ export const LandingPage = () => {
             }}
           >
             <iframe
+              className="map-iframe"
               title="Mani's Elite Makeover Location"
               src="https://maps.google.com/maps?q=17.3151943,78.5773701&t=&z=20&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="380"
-              style={{ border: 0, display: "block" }}
+              style={{ border: 0, display: "block", width: "100%" }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -395,7 +596,7 @@ export const LandingPage = () => {
       {/* ── CTA Banner ── */}
       <section
         style={{
-          padding: "4rem 0",
+          padding: "clamp(2rem, 5vw, 5rem) 0",
           background: "linear-gradient(135deg, #0f0d00 0%, #1a1400 50%, #0f0d00 100%)",
           borderTop: "1px solid rgba(201,162,39,0.2)",
           borderBottom: "1px solid rgba(201,162,39,0.2)",
@@ -411,7 +612,7 @@ export const LandingPage = () => {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center" }}>
             <Link
               className="btn-primary"
-              to={profile ? (profile.role === "admin" ? "/admin" : "/dashboard") : "/auth"}
+              to={profile ? (profile.role === "admin" ? "/admin" : "/dashboard") : "/auth/signup"}
               style={{ fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
             >
               Get Started Now <Sparkles size={16} />

@@ -3,12 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mani's Elite Makeover — Premium Beauty Studio</title>
-    <meta name="description" content="Mani's Elite Makeover — Premium beauty studio offering professional home visits and salon services. Book your appointment today." />
+    <!-- ✅ Responsive viewport for ALL devices (phone, tablet, laptop, TV) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0" />
+    <!-- PWA / mobile colour -->
     <meta name="theme-color" content="#0a0a0a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- SEO -->
+    <title>Mani's Elite Makeover — Premium Beauty Studio</title>
+    <meta name="description" content="Mani's Elite Makeover — Premium beauty studio offering professional home visits and salon services in Hyderabad. Book your appointment today." />
+    <meta property="og:title" content="Mani's Elite Makeover — Premium Beauty Studio" />
+    <meta property="og:description" content="World-class beauty services at your home or visit our luxury studio in Hyderabad." />
+    <meta property="og:type" content="website" />
   </head>
-  <body style="background:#0a0a0a; margin:0;">
+  <body style="background:#0a0a0a; margin:0; overflow-x:hidden;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

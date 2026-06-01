@@ -37,6 +37,24 @@ export const CustomerDashboardPage = () => {
   const [editBeautyUse, setEditBeautyUse] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // ── Feedback / Rating state ──────────────────────────────────
+  const [feedbackRatings, setFeedbackRatings] = useState<Record<string, number>>({});
+  const [feedbackTexts,   setFeedbackTexts]   = useState<Record<string, string>>({});
+  const [feedbackHover,   setFeedbackHover]   = useState<Record<string, number>>({});
+  const [feedbackDone,    setFeedbackDone]    = useState<Record<string, { rating: number; text: string }>>(() => {
+    try { return JSON.parse(localStorage.getItem("manis_feedback") ?? "{}") as Record<string, { rating: number; text: string }>; }
+    catch { return {}; }
+  });
+
+  const submitFeedback = (bookingId: string) => {
+    const rating = feedbackRatings[bookingId] ?? 0;
+    if (!rating) return;
+    const text = feedbackTexts[bookingId] ?? "";
+    const updated = { ...feedbackDone, [bookingId]: { rating, text } };
+    setFeedbackDone(updated);
+    localStorage.setItem("manis_feedback", JSON.stringify(updated));
+  };
+
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -93,7 +111,7 @@ export const CustomerDashboardPage = () => {
   ];
 
   return (
-    <div style={{ background: "#0a0a0a", minHeight: "calc(100vh - 120px)", padding: "2rem 0" }}>
+    <div style={{ background: "#0a0a0a", minHeight: "calc(100vh - 120px)", padding: "clamp(1rem, 3vw, 2rem) 0" }}>
       <div className="section-shell">
         {/* Welcome Header */}
         <motion.div
@@ -137,7 +155,7 @@ export const CustomerDashboardPage = () => {
         )}
 
         {/* Tab Navigation */}
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.4rem", marginBottom: "2rem", flexWrap: "wrap" }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -146,20 +164,23 @@ export const CustomerDashboardPage = () => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.625rem 1.25rem",
+                gap: "0.4rem",
+                padding: "clamp(0.45rem, 1.5vw, 0.625rem) clamp(0.75rem, 2.5vw, 1.25rem)",
                 borderRadius: "2rem",
                 border: activeTab === tab.id ? "1px solid #c9a227" : "1px solid #2a2a2a",
                 background: activeTab === tab.id ? "rgba(201,162,39,0.15)" : "transparent",
                 color: activeTab === tab.id ? "#c9a227" : "#666",
-                fontSize: "0.85rem",
+                fontSize: "clamp(0.78rem, 2vw, 0.875rem)",
                 fontWeight: activeTab === tab.id ? 600 : 400,
                 cursor: "pointer",
                 transition: "all 0.2s",
+                whiteSpace: "nowrap",
+                minHeight: "40px",
+                fontFamily: "Poppins, sans-serif",
               }}
             >
               {tab.icon}
-              {tab.label}
+              <span className="tab-label-text">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -242,7 +263,7 @@ export const CustomerDashboardPage = () => {
             {loading ? (
               <p style={{ color: "#555", fontSize: "0.9rem" }}>Loading services...</p>
             ) : (
-              <div style={{ display: "grid", gap: "1.25rem", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+              <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 310px), 1fr))" }}>
                 {services.map((service) => {
                   let activeImage = service.image_url;
                   const nameNorm = service.name.trim().toLowerCase();
@@ -302,50 +323,148 @@ export const CustomerDashboardPage = () => {
                 </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {bookings.map((booking) => (
-                  <article
-                    key={booking.id}
-                    style={{
-                      background: "#111",
-                      border: "1px solid #1e1e1e",
-                      borderRadius: "1rem",
-                      padding: "1.25rem",
-                      transition: "border-color 0.2s",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(201,162,39,0.3)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e1e")}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                      <p style={{ color: "#e8d5a3", fontWeight: 600, margin: 0 }}>
-                        {booking.service?.name ?? "Service"}
-                      </p>
-                      <span className={statusClass[booking.status] ?? "status-pending"}>
-                        {booking.status}
-                      </span>
-                    </div>
-                    <p style={{ color: "#666", fontSize: "0.85rem", margin: "0 0 0.25rem" }}>
-                      📅 {formatBookingDateTime(booking.starts_at, booking.ends_at)}
-                    </p>
-                    <p style={{ color: "#555", fontSize: "0.8rem", margin: 0 }}>
-                      💳 Payment: {booking.payment_type} ({booking.payment_status})
-                    </p>
-                    {booking.status !== "cancelled" && canCancelBooking(booking.starts_at) && (
-                      <button
-                        className="btn-secondary"
-                        style={{ marginTop: "1rem", fontSize: "0.8rem", padding: "0.5rem 1rem" }}
-                        type="button"
-                        onClick={() => void onCancel(booking.id)}
-                      >
-                        Cancel Booking
-                      </button>
-                    )}
-                  </article>
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                {bookings.map((booking) => {
+                  const done        = feedbackDone[booking.id];
+                  const rating      = feedbackRatings[booking.id] ?? 0;
+                  const hover       = feedbackHover[booking.id]   ?? 0;
+                  const text        = feedbackTexts[booking.id]   ?? "";
+                  const isCompleted = booking.status === "completed";
+
+                  return (
+                    <article
+                      key={booking.id}
+                      style={{
+                        background: "linear-gradient(145deg, #111111, #0f0e00)",
+                        border: `1px solid ${isCompleted ? "rgba(201,162,39,0.25)" : "#1e1e1e"}`,
+                        borderRadius: "1.25rem",
+                        overflow: "hidden",
+                        transition: "border-color 0.2s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(201,162,39,0.4)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = isCompleted ? "rgba(201,162,39,0.25)" : "#1e1e1e")}
+                    >
+                      {/* Booking info */}
+                      <div style={{ padding: "1.25rem 1.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                          <p style={{ color: "#e8d5a3", fontWeight: 700, margin: 0, fontFamily: "'Cinzel', serif", fontSize: "1rem" }}>
+                            {booking.service?.name ?? "Service"}
+                          </p>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span className={statusClass[booking.status] ?? "status-pending"}>
+                              {booking.status}
+                            </span>
+                            {isCompleted && done && (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.65rem", color: "#c9a227", fontWeight: 700, background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "9999px", padding: "0.15rem 0.5rem" }}>
+                                ✓ Reviewed
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p style={{ color: "#666", fontSize: "0.85rem", margin: "0 0 0.2rem" }}>
+                          📅 {formatBookingDateTime(booking.starts_at, booking.ends_at)}
+                        </p>
+                        <p style={{ color: "#555", fontSize: "0.8rem", margin: 0 }}>
+                          💳 Payment: {booking.payment_type} ({booking.payment_status})
+                        </p>
+                        {booking.status !== "cancelled" && canCancelBooking(booking.starts_at) && (
+                          <button
+                            className="btn-secondary"
+                            style={{ marginTop: "1rem", fontSize: "0.8rem", padding: "0.45rem 1rem" }}
+                            type="button"
+                            onClick={() => void onCancel(booking.id)}
+                          >
+                            Cancel Booking
+                          </button>
+                        )}
+                      </div>
+
+                      {/* ── Feedback panel — completed bookings only ── */}
+                      {isCompleted && (
+                        <div style={{ borderTop: "1px solid rgba(201,162,39,0.15)", background: "rgba(201,162,39,0.025)" }}>
+                          {done ? (
+                            /* Already submitted — show saved review */
+                            <div style={{ padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                              <p style={{ color: "#c9a227", fontWeight: 700, fontSize: "0.75rem", margin: 0, letterSpacing: "0.06em" }}>YOUR REVIEW</p>
+                              <div style={{ display: "flex", gap: "3px" }}>
+                                {[1,2,3,4,5].map((s) => (
+                                  <Star key={s} size={18} style={{ color: s <= done.rating ? "#c9a227" : "#333", fill: s <= done.rating ? "#c9a227" : "none", filter: s <= done.rating ? "drop-shadow(0 0 3px rgba(201,162,39,0.5))" : "none" }} />
+                                ))}
+                              </div>
+                              {done.text && (
+                                <p style={{ color: "#888", fontStyle: "italic", fontSize: "0.875rem", margin: 0 }}>"{done.text}"</p>
+                              )}
+                            </div>
+                          ) : (
+                            /* Not yet rated — show rating form */
+                            <div style={{ padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span style={{ fontSize: "1.1rem" }}>⭐</span>
+                                <p style={{ color: "#c9a227", fontWeight: 700, fontSize: "0.75rem", margin: 0, letterSpacing: "0.06em" }}>RATE YOUR EXPERIENCE</p>
+                              </div>
+
+                              {/* Interactive star picker */}
+                              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                {[1,2,3,4,5].map((s) => (
+                                  <Star
+                                    key={s}
+                                    size={28}
+                                    style={{
+                                      cursor: "pointer",
+                                      color: s <= (hover || rating) ? "#c9a227" : "#333",
+                                      fill:  s <= (hover || rating) ? "#c9a227" : "none",
+                                      filter: s <= (hover || rating) ? "drop-shadow(0 0 4px rgba(201,162,39,0.6))" : "none",
+                                      transition: "all 0.15s ease",
+                                    }}
+                                    onClick={() => setFeedbackRatings((prev) => ({ ...prev, [booking.id]: s }))}
+                                    onMouseEnter={() => setFeedbackHover((prev) => ({ ...prev, [booking.id]: s }))}
+                                    onMouseLeave={() => setFeedbackHover((prev) => ({ ...prev, [booking.id]: 0 }))}
+                                  />
+                                ))}
+                                {rating > 0 && (
+                                  <span style={{ color: "#c9a227", fontSize: "0.8rem", fontWeight: 600, marginLeft: "0.25rem" }}>
+                                    {["Poor", "Fair", "Good", "Great", "Excellent!"][rating - 1]}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Comment textarea */}
+                              <textarea
+                                rows={2}
+                                placeholder="Share your experience (optional)…"
+                                value={text}
+                                onChange={(e) => setFeedbackTexts((prev) => ({ ...prev, [booking.id]: e.target.value }))}
+                                style={{
+                                  width: "100%", padding: "0.75rem", background: "#0f0f0f",
+                                  border: "1px solid #2a2a2a", borderRadius: "0.75rem",
+                                  color: "#e8d5a3", fontSize: "0.875rem", resize: "vertical",
+                                  fontFamily: "'Poppins', sans-serif", outline: "none",
+                                  boxSizing: "border-box", transition: "border-color 0.2s",
+                                }}
+                                onFocus={(e) => (e.target.style.borderColor = "#c9a227")}
+                                onBlur={(e) => (e.target.style.borderColor = "#2a2a2a")}
+                              />
+
+                              <button
+                                className="btn-primary"
+                                style={{ alignSelf: "flex-start", fontSize: "0.825rem", padding: "0.55rem 1.25rem", opacity: rating === 0 ? 0.45 : 1 }}
+                                disabled={rating === 0}
+                                onClick={() => submitFeedback(booking.id)}
+                              >
+                                Submit Review
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </motion.div>
         )}
+
 
         {/* ── Profile Tab ── */}
         {activeTab === "profile" && (

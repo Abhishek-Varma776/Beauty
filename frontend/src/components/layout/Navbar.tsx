@@ -6,10 +6,10 @@ import { useAuth } from "../../context/AuthContext";
 import { CrownLogo } from "./CrownLogo";
 
 const navItems = [
-  { label: "Home", to: "/" },
+  { label: "Home",     to: "/" },
   { label: "Services", to: "/#services" },
-  { label: "Booking", to: "/dashboard" },
-  { label: "Contact", to: "/#contact" },
+  { label: "Booking",  to: "/dashboard" },
+  { label: "Contact",  to: "/#contact" },
 ];
 
 export const Navbar = () => {
@@ -20,37 +20,39 @@ export const Navbar = () => {
   const onSignOut = async () => {
     await signOut();
     navigate("/");
+    setMobileOpen(false);
   };
 
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
-      {/* ── Announcement bar above navbar ── */}
+
+      {/* ── Announcement Bar ── */}
       <div
         style={{
           background: "linear-gradient(90deg, #0a0a0a 0%, #1a1400 40%, #0a0a0a 100%)",
           borderBottom: "1px solid rgba(201,162,39,0.3)",
-          padding: "0.4rem 1rem",
-          textAlign: "center",
+          padding: "0.35rem 1rem",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: "0.75rem",
+          gap: "0.5rem",
+          overflow: "hidden",
         }}
       >
-        <span style={{ fontSize: "0.7rem", color: "#888", letterSpacing: "0.1em" }}>✦</span>
+        <span style={{ fontSize: "0.65rem", color: "#888", flexShrink: 0 }}>✦</span>
         <p
-          className="text-gold-gradient"
+          className="text-gold-gradient announce-text"
           style={{
             fontFamily: "'Cinzel', serif",
-            fontSize: "0.75rem",
+            fontSize: "clamp(0.6rem, 2vw, 0.75rem)",
             fontWeight: 600,
-            letterSpacing: "0.2em",
+            letterSpacing: "clamp(0.05em, 1vw, 0.2em)",
             margin: 0,
           }}
         >
           MANI'S ELITE MAKEOVER — Premium Beauty Services
         </p>
-        <span style={{ fontSize: "0.7rem", color: "#888", letterSpacing: "0.1em" }}>✦</span>
+        <span style={{ fontSize: "0.65rem", color: "#888", flexShrink: 0 }}>✦</span>
       </div>
 
       {/* ── Main Navbar ── */}
@@ -61,11 +63,20 @@ export const Navbar = () => {
           boxShadow: "0 4px 20px rgba(0,0,0,0.8)",
         }}
       >
-        <div className="section-shell" style={{ display: "flex", height: "70px", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+        <div
+          className="section-shell"
+          style={{
+            display: "flex",
+            height: "clamp(56px, 8vw, 72px)",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+          }}
+        >
           <CrownLogo />
 
-          {/* Desktop nav */}
-          <nav style={{ display: "flex", alignItems: "center", gap: "2rem" }} className="hidden-mobile">
+          {/* Desktop nav — hidden on mobile via CSS class */}
+          <nav className="hidden-mobile" style={{ display: "flex", alignItems: "center", gap: "clamp(1rem, 2.5vw, 2rem)" }}>
             {navItems.map((item) => (
               <a
                 key={item.label}
@@ -73,11 +84,12 @@ export const Navbar = () => {
                 style={{
                   color: "#a08040",
                   textDecoration: "none",
-                  fontSize: "0.875rem",
+                  fontSize: "clamp(0.78rem, 1.5vw, 0.875rem)",
                   fontWeight: 500,
                   letterSpacing: "0.05em",
                   transition: "color 0.2s",
                   position: "relative",
+                  padding: "0.25rem 0",
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#c9a227")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#a08040")}
@@ -96,19 +108,20 @@ export const Navbar = () => {
             )}
 
             {!profile ? (
-              <div style={{ display: "flex", gap: "0.75rem", marginLeft: "1rem" }}>
+              <div style={{ display: "flex", gap: "0.65rem", marginLeft: "0.5rem" }}>
                 <Link
                   to="/auth/signin"
                   style={{
-                    padding: "0.5rem 1.2rem",
+                    padding: "0.45rem 1rem",
                     border: "1px solid rgba(201,162,39,0.5)",
                     borderRadius: "0.75rem",
                     color: "#c9a227",
                     textDecoration: "none",
-                    fontSize: "0.875rem",
+                    fontSize: "0.825rem",
                     fontWeight: 600,
                     transition: "all 0.2s",
                     background: "transparent",
+                    whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(201,162,39,0.1)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
@@ -118,19 +131,19 @@ export const Navbar = () => {
                 <Link
                   className="btn-primary"
                   to="/auth/signup"
-                  style={{ padding: "0.5rem 1.25rem", borderRadius: "0.75rem", fontSize: "0.875rem" }}
+                  style={{ padding: "0.45rem 1.1rem", borderRadius: "0.75rem", fontSize: "0.825rem" }}
                 >
                   Sign Up
                 </Link>
               </div>
             ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginLeft: "1rem" }}>
-                <div style={{ display: "flex", gap: "1rem", fontSize: "0.75rem", color: "#666" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginLeft: "0.5rem" }}>
+                <div style={{ display: "flex", gap: "0.75rem", fontSize: "0.72rem", color: "#666" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    <Phone size={12} /> 24/7 Support
+                    <Phone size={11} /> 24/7 Support
                   </span>
                   <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    <Clock size={12} /> Quick Booking
+                    <Clock size={11} /> Quick Booking
                   </span>
                 </div>
                 <Link
@@ -139,31 +152,34 @@ export const Navbar = () => {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.5rem",
-                    padding: "0.5rem 1rem",
+                    gap: "0.4rem",
+                    padding: "0.4rem 0.875rem",
                     border: "1px solid rgba(201,162,39,0.4)",
                     borderRadius: "2rem",
                     background: "rgba(201,162,39,0.08)",
                     color: "#c9a227",
                     textDecoration: "none",
-                    fontSize: "0.8rem",
+                    fontSize: "0.78rem",
                     fontWeight: 600,
                     transition: "all 0.2s",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <User size={16} />
+                  <User size={15} />
                   <span>{profile.name?.split(" ")[0]}</span>
                 </Link>
                 <button
                   style={{
-                    padding: "0.5rem 1rem",
+                    padding: "0.4rem 0.875rem",
                     border: "1px solid #2a2a2a",
                     borderRadius: "0.75rem",
                     background: "transparent",
                     color: "#777",
-                    fontSize: "0.8rem",
+                    fontSize: "0.78rem",
                     cursor: "pointer",
                     transition: "color 0.2s, border-color 0.2s",
+                    whiteSpace: "nowrap",
+                    fontFamily: "Poppins, sans-serif",
                   }}
                   type="button"
                   onClick={() => void onSignOut()}
@@ -176,51 +192,60 @@ export const Navbar = () => {
             )}
           </nav>
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger — shown on mobile via CSS class */}
           <button
             style={{
               background: "rgba(201,162,39,0.08)",
               border: "1px solid rgba(201,162,39,0.3)",
               borderRadius: "0.625rem",
-              padding: "0.6rem",
+              padding: "0.55rem",
               cursor: "pointer",
               color: "#c9a227",
+              minWidth: "44px",
+              minHeight: "44px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Open navigation"
+            aria-expanded={mobileOpen}
             className="show-mobile"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        {/* Mobile menu */}
+        {/* ── Mobile Menu Drawer ── */}
         {mobileOpen && (
           <div
             style={{
               borderTop: "1px solid rgba(201,162,39,0.2)",
               background: "#0d0d0d",
               padding: "1rem",
+              maxHeight: "calc(100vh - 120px)",
+              overflowY: "auto",
             }}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               {navItems.map((item) => (
                 <a
                   key={item.label}
                   href={item.to}
                   style={{
-                    padding: "0.75rem 1rem",
+                    padding: "0.875rem 1rem",
                     borderRadius: "0.75rem",
                     color: "#c9a227",
                     textDecoration: "none",
-                    fontSize: "0.9rem",
+                    fontSize: "0.925rem",
                     fontWeight: 500,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     background: "rgba(201,162,39,0.05)",
                     border: "1px solid rgba(201,162,39,0.1)",
+                    minHeight: "48px",
                   }}
                   onClick={() => setMobileOpen(false)}
                 >
@@ -228,19 +253,49 @@ export const Navbar = () => {
                   <span style={{ fontSize: "0.6rem" }}>✦</span>
                 </a>
               ))}
-              <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "0.75rem", marginTop: "0.25rem" }}>
+
+              {profile?.role === "admin" && (
+                <a
+                  href="/admin"
+                  style={{
+                    padding: "0.875rem 1rem",
+                    borderRadius: "0.75rem",
+                    color: "#c9a227",
+                    textDecoration: "none",
+                    fontSize: "0.925rem",
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    background: "rgba(201,162,39,0.1)",
+                    border: "1px solid rgba(201,162,39,0.3)",
+                    minHeight: "48px",
+                  }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span>Admin Dashboard</span>
+                  <span style={{ fontSize: "0.6rem" }}>✦</span>
+                </a>
+              )}
+
+              <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "0.75rem", marginTop: "0.25rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                 {!profile ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <>
                     <Link
                       to="/auth/signin"
                       style={{
-                        padding: "0.75rem 1rem",
+                        padding: "0.875rem 1rem",
                         borderRadius: "0.75rem",
                         border: "1px solid rgba(201,162,39,0.4)",
                         color: "#c9a227",
                         textDecoration: "none",
                         textAlign: "center",
                         fontWeight: 600,
+                        fontSize: "0.925rem",
+                        minHeight: "48px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                       onClick={() => setMobileOpen(false)}
                     >
@@ -249,18 +304,18 @@ export const Navbar = () => {
                     <Link
                       className="btn-primary"
                       to="/auth/signup"
-                      style={{ borderRadius: "0.75rem", textAlign: "center", textDecoration: "none" }}
+                      style={{ borderRadius: "0.75rem", textAlign: "center", textDecoration: "none", minHeight: "48px" }}
                       onClick={() => setMobileOpen(false)}
                     >
-                      Sign Up
+                      Sign Up — Create Account
                     </Link>
-                  </div>
+                  </>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <>
                     <Link
                       to="/dashboard"
                       style={{
-                        padding: "0.75rem 1rem",
+                        padding: "0.875rem 1rem",
                         borderRadius: "0.75rem",
                         border: "1px solid rgba(201,162,39,0.3)",
                         color: "#c9a227",
@@ -268,14 +323,16 @@ export const Navbar = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem",
+                        fontSize: "0.925rem",
+                        minHeight: "48px",
                       }}
                       onClick={() => setMobileOpen(false)}
                     >
-                      <User size={16} /> My Profile & Bookings
+                      <User size={16} /> My Profile &amp; Bookings
                     </Link>
                     <button
                       style={{
-                        padding: "0.75rem 1rem",
+                        padding: "0.875rem 1rem",
                         borderRadius: "0.75rem",
                         border: "1px solid rgba(239,68,68,0.3)",
                         background: "transparent",
@@ -283,24 +340,22 @@ export const Navbar = () => {
                         cursor: "pointer",
                         width: "100%",
                         textAlign: "left",
+                        fontSize: "0.925rem",
+                        fontFamily: "Poppins, sans-serif",
+                        minHeight: "48px",
                       }}
                       type="button"
-                      onClick={() => { void onSignOut(); setMobileOpen(false); }}
+                      onClick={() => { void onSignOut(); }}
                     >
                       Logout
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
           </div>
         )}
       </header>
-
-      <style>{`
-        @media (min-width: 768px) { .show-mobile { display: none !important; } }
-        @media (max-width: 767px) { .hidden-mobile { display: none !important; } }
-      `}</style>
     </div>
   );
 };

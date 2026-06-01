@@ -26,6 +26,11 @@ export const AuthPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [alreadyExists, setAlreadyExists] = useState(false);
 
+  // ── Scroll to top whenever this page mounts or mode switches ──
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [mode]);
+
   useEffect(() => {
     const draft = localStorage.getItem(draftKey);
     if (draft) {

@@ -17,9 +17,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="flex min-h-screen flex-col">
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#0a0a0a", overflowX: "hidden", width: "100%" }}>
           <Navbar />
-          <main className="flex-1">
+          <main style={{ flex: 1 }}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
