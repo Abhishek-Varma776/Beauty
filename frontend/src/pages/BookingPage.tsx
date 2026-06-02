@@ -15,6 +15,7 @@ import {
 } from "../lib/queries";
 import { openRazorpayCheckout, loadRazorpayScript } from "../lib/payment";
 import type { PaymentType, Service, SlotOption } from "../types/domain";
+import { BACKEND_URL } from "../api/axios";
 
 export const BookingPage = () => {
   const { serviceId } = useParams();
@@ -50,17 +51,17 @@ export const BookingPage = () => {
         const nameNorm = found.name.trim().toLowerCase();
         
         if (nameNorm === "hair color") {
-          activeImage = "http://localhost:5000/uploads/hair-color.png";
+          activeImage = `${BACKEND_URL}/uploads/hair-color.png`;
         } else if (nameNorm === "full face threading") {
-          activeImage = "http://localhost:5000/uploads/full-face-threading.png";
+          activeImage = `${BACKEND_URL}/uploads/full-face-threading.png`;
         } else if (nameNorm === "cleanup") {
-          activeImage = "http://localhost:5000/uploads/cleanup.png";
+          activeImage = `${BACKEND_URL}/uploads/cleanup.png`;
         } else if (nameNorm === "pedicure") {
-          activeImage = "http://localhost:5000/uploads/pedicure.png";
+          activeImage = `${BACKEND_URL}/uploads/pedicure.png`;
         } else if (nameNorm === "upper lip") {
-          activeImage = "http://localhost:5000/uploads/upper-lip.png";
+          activeImage = `${BACKEND_URL}/uploads/upper-lip.png`;
         } else if (nameNorm === "eyebrows") {
-          activeImage = "http://localhost:5000/uploads/eyebrows.png";
+          activeImage = `${BACKEND_URL}/uploads/eyebrows.png`;
         }
 
         setService({ ...found, image_url: activeImage });

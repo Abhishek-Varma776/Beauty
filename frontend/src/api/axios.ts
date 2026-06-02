@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const BACKEND_URL = (import.meta.env.VITE_API_URL || "https://beauty-backend-8i3u.onrender.com/api").replace(/\/api\/?$/, "");
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: `${BACKEND_URL}/api`,
 });
 
 API.interceptors.request.use((config) => {

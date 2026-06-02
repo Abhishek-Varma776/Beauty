@@ -7,6 +7,7 @@ import { ServiceCard } from "../components/services/ServiceCard";
 import { useAuth } from "../context/AuthContext";
 import { fetchActiveServices } from "../lib/queries";
 import type { Service } from "../types/domain";
+import { BACKEND_URL } from "../api/axios";
 
 export const LandingPage = () => {
   const { profile } = useAuth();
@@ -267,21 +268,21 @@ export const LandingPage = () => {
               const nameNorm = service.name.trim().toLowerCase();
               
               if (nameNorm === "hair color") {
-                activeImage = "http://localhost:5000/uploads/hair-color.png";
+                activeImage = `${BACKEND_URL}/uploads/hair-color.png`;
               } else if (nameNorm === "full face threading") {
-                activeImage = "http://localhost:5000/uploads/full-face-threading.png";
+                activeImage = `${BACKEND_URL}/uploads/full-face-threading.png`;
               } else if (nameNorm === "cleanup") {
-                activeImage = "http://localhost:5000/uploads/cleanup.png";
+                activeImage = `${BACKEND_URL}/uploads/cleanup.png`;
               } else if (nameNorm === "pedicure") {
-                activeImage = "http://localhost:5000/uploads/pedicure.png";
+                activeImage = `${BACKEND_URL}/uploads/pedicure.png`;
               } else if (nameNorm === "upper lip") {
-                activeImage = "http://localhost:5000/uploads/upper-lip.png";
+                activeImage = `${BACKEND_URL}/uploads/upper-lip.png`;
               } else if (nameNorm === "eyebrows") {
-                activeImage = "http://localhost:5000/uploads/eyebrows.png";
+                activeImage = `${BACKEND_URL}/uploads/eyebrows.png`;
               } else if (nameNorm === "manicure") {
-                activeImage = "http://localhost:5000/uploads/manicure.png";
+                activeImage = `${BACKEND_URL}/uploads/manicure.png`;
               } else if (nameNorm === "saree draping") {
-                activeImage = "http://localhost:5000/uploads/saree-draping.png";
+                activeImage = `${BACKEND_URL}/uploads/saree-draping.png`;
               }
 
               const displayService = { ...service, image_url: activeImage };
