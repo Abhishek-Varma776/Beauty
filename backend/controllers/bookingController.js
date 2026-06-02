@@ -152,18 +152,23 @@ exports.createOnlineOrder = asyncHandler(async (req, res) => {
 
   const amountPaise = Math.round(priceRupees * 100); // Razorpay expects paise
 
-  const razorpay = getRazorpay();
-
-  const order = await razorpay.orders.create({
-    amount: amountPaise,
-    currency: "INR",
-    receipt: `booking_${bookingId}`,
-    notes: {
-      bookingId: String(bookingId),
-      userId: String(req.user.id),
-      serviceId: String(service._id),
-    },
-  });
+  let order;
+  try {
+    const razorpay = getRazorpay();
+    order = await razorpay.orders.create({
+      amount: amountPaise,
+      currency: "INR",
+      receipt: `booking_${bookingId}`,
+      notes: {
+        bookingId: String(bookingId),
+        userId: String(req.user.id),
+        serviceId: String(service._id),
+      },
+    });
+  } catch (razorpayErr) {
+    res.status(400);
+    throw new Error(`Razorpay Setup or Connection Error: ${razorpayErr.message}. Make sure RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables are correctly set on your Render backend dashboard.`);
+  }
 
   res.json({
     keyId: process.env.RAZORPAY_KEY_ID,
