@@ -13,6 +13,12 @@ const getRazorpay = () => {
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
 };
 
+const isRazorpayConfigured = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID || "";
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
+  return keyId && keySecret && !keyId.includes("REPLACE_WITH") && !keySecret.includes("REPLACE_WITH");
+};
+
 const populateBooking = (query) => query.populate("service").populate("customer", "name phone");
 
 exports.availableSlots = asyncHandler(async (req, res) => {
@@ -152,6 +158,18 @@ exports.createOnlineOrder = asyncHandler(async (req, res) => {
 
   const amountPaise = Math.round(priceRupees * 100); // Razorpay expects paise
 
+  if (!isRazorpayConfigured()) {
+    // ─── Simulated Sandbox Mode ───
+    console.log("ℹ️  Razorpay keys not configured; running in simulated test checkout mode.");
+    return res.json({
+      keyId: "rzp_test_simulation_mode",
+      amount: amountPaise,
+      currency: "INR",
+      orderId: `sim_order_${bookingId}_${Math.random().toString(36).substring(2, 9)}`,
+      isSimulated: true,
+    });
+  }
+
   let order;
   try {
     const razorpay = getRazorpay();
@@ -185,6 +203,26 @@ exports.verifyPayment = asyncHandler(async (req, res) => {
   if (!bookingId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
     res.status(400);
     throw new Error("All payment fields are required for verification");
+  }
+
+  // ─── Bypass Signature Verification for Simulated Sandbox Payments ───
+  if (razorpayOrderId.startsWith("sim_")) {
+    console.log(`ℹ️  Simulated payment verified successfully for booking: ${bookingId}`);
+    const booking = await Booking.findByIdAndUpdate(
+      bookingId,
+      {
+        status: "confirmed",
+        payment_status: "paid",
+        razorpay_order_id: razorpayOrderId,
+        razorpay_payment_id: razorpayPaymentId,
+      },
+      { new: true }
+    );
+    if (!booking) {
+      res.status(404);
+      throw new Error("Booking not found after payment verification");
+    }
+    return res.json({ booking });
   }
 
   const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
