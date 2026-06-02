@@ -17,6 +17,33 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+    if (to.startsWith("/#")) {
+      e.preventDefault();
+      const targetId = to.substring(2);
+      setMobileOpen(false);
+      
+      if (window.location.pathname === "/") {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        navigate("/");
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 150);
+      }
+    } else {
+      e.preventDefault();
+      setMobileOpen(false);
+      navigate(to);
+    }
+  };
+
   const onSignOut = async () => {
     await signOut();
     navigate("/");
@@ -81,6 +108,7 @@ export const Navbar = () => {
               <a
                 key={item.label}
                 href={item.to}
+                onClick={(e) => handleNavClick(e, item.to)}
                 style={{
                   color: "#a08040",
                   textDecoration: "none",
@@ -247,7 +275,7 @@ export const Navbar = () => {
                     border: "1px solid rgba(201,162,39,0.1)",
                     minHeight: "48px",
                   }}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => handleNavClick(e, item.to)}
                 >
                   <span>{item.label}</span>
                   <span style={{ fontSize: "0.6rem" }}>✦</span>
