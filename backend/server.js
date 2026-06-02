@@ -16,7 +16,6 @@ const app = express();
 app.use(helmet({ crossOriginResourcePolicy: false }));
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://beauty-frontend-ydqjvwu0h-pujalasnabhishek-2454s-projects.vercel.app",
 ];
 if (process.env.CLIENT_URL) {
   allowedOrigins.push(process.env.CLIENT_URL);
@@ -25,7 +24,12 @@ if (process.env.CLIENT_URL) {
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        /^https:\/\/beauty-frontend-.*\.vercel\.app$/.test(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

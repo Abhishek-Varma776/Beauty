@@ -151,6 +151,9 @@ export const AuthPage = () => {
                 className="input"
                 style={{ paddingLeft: "2.75rem" }}
                 placeholder="Full name"
+                name="name"
+                id="signup-name"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -167,6 +170,9 @@ export const AuthPage = () => {
                 style={{ paddingLeft: "2.75rem" }}
                 type="tel"
                 placeholder="Mobile number (e.g. 9876543210)"
+                name="phone"
+                id="signup-phone"
+                autoComplete="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
@@ -185,6 +191,9 @@ export const AuthPage = () => {
                 style={{ paddingLeft: "2.75rem", paddingRight: "2.75rem" }}
                 type={showPassword ? "text" : "password"}
                 placeholder="Password (min. 6 characters)"
+                name="password"
+                id="signup-password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -254,6 +263,9 @@ export const AuthPage = () => {
                 style={{ paddingLeft: "2.75rem" }}
                 type="tel"
                 placeholder="Mobile number"
+                name="phone"
+                id="signin-phone"
+                autoComplete="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
@@ -270,6 +282,9 @@ export const AuthPage = () => {
                 style={{ paddingLeft: "2.75rem", paddingRight: "2.75rem" }}
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
+                name="password"
+                id="signin-password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
