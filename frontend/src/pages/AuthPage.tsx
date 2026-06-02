@@ -4,8 +4,46 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Eye, EyeOff, Phone, Lock, User } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
+import {
+  forgotPassword as requestResetCodeApi,
+  verifyResetCode as verifyCodeApi,
+  resetPassword as resetPasswordApi,
+} from "../services/authservice";
 
 const draftKey = "manis_signup_draft";
+
+const validatePassword = (pass: string) => {
+  return {
+    length: pass.length >= 8,
+    uppercase: /[A-Z]/.test(pass),
+    lowercase: /[a-z]/.test(pass),
+    digit: /\d/.test(pass),
+    special: /[@$!%*?&#]/.test(pass),
+  };
+};
+
+const PasswordChecklist = ({ pass }: { pass: string }) => {
+  const checks = validatePassword(pass);
+  return (
+    <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.25rem", textAlign: "left", paddingLeft: "0.5rem" }}>
+      <div style={{ color: checks.length ? "#22c55e" : "#666", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span>{checks.length ? "✓" : "○"}</span> At least 8 characters
+      </div>
+      <div style={{ color: checks.uppercase ? "#22c55e" : "#666", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span>{checks.uppercase ? "✓" : "○"}</span> One uppercase letter (A-Z)
+      </div>
+      <div style={{ color: checks.lowercase ? "#22c55e" : "#666", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span>{checks.lowercase ? "✓" : "○"}</span> One lowercase letter (a-z)
+      </div>
+      <div style={{ color: checks.digit ? "#22c55e" : "#666", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span>{checks.digit ? "✓" : "○"}</span> One number (0-9)
+      </div>
+      <div style={{ color: checks.special ? "#22c55e" : "#666", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span>{checks.special ? "✓" : "○"}</span> One special character (@$!%*?&#)
+      </div>
+    </div>
+  );
+};
 
 export const AuthPage = () => {
   const { session, profile, signInWithPassword, signUpWithPassword } = useAuth();
@@ -25,6 +63,14 @@ export const AuthPage = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [alreadyExists, setAlreadyExists] = useState(false);
+
+  // Forgot password flow states
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1 = Enter Phone, 2 = Verify Code, 3 = Reset Password
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [receivedOtp, setReceivedOtp] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // ── Scroll to top whenever this page mounts or mode switches ──
   useEffect(() => {
@@ -90,6 +136,72 @@ export const AuthPage = () => {
     }
   };
 
+  const handleRequestCode = async (event: FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const res = await requestResetCodeApi(phone.trim());
+      setSuccessMessage(res.message);
+      if (res.otp) {
+        setReceivedOtp(res.otp);
+      }
+      setResetStep(2);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to request reset code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleVerifyCode = async (event: FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const res = await verifyCodeApi(phone.trim(), resetCode.trim());
+      setSuccessMessage(res.message);
+      setResetStep(3);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid or expired verification code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleResetPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      await resetPasswordApi({
+        phone: phone.trim(),
+        code: resetCode.trim(),
+        newPassword: newPassword,
+      });
+      setSuccessMessage("Password reset successfully! Redirecting to login...");
+      setTimeout(() => {
+        setForgotMode(false);
+        setResetStep(1);
+        setPhone("");
+        setPassword("");
+        setNewPassword("");
+        setResetCode("");
+        setReceivedOtp("");
+        setSuccessMessage(null);
+        setError(null);
+        navigate("/auth/signin");
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to reset password");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -116,31 +228,33 @@ export const AuthPage = () => {
         }}
       >
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>👑</div>
-          <span className="badge" style={{ marginBottom: "0.75rem", display: "inline-block" }}>
-            {mode === "signin" ? "Welcome Back" : "Join Us"}
-          </span>
-          <h1
-            style={{
-              fontFamily: "'Cinzel', 'Playfair Display', serif",
-              fontSize: "1.75rem",
-              fontWeight: 700,
-              margin: "0.5rem 0 0.5rem",
-              color: "#e8d5a3",
-            }}
-          >
-            {mode === "signin" ? "Sign In" : "Create Account"}
-          </h1>
-          <p style={{ color: "#555", fontSize: "0.85rem", margin: 0 }}>
-            {mode === "signin"
-              ? "Sign in with your mobile number & password"
-              : "Sign up with your mobile number"}
-          </p>
-        </div>
+        {!forgotMode && (
+          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>👑</div>
+            <span className="badge" style={{ marginBottom: "0.75rem", display: "inline-block" }}>
+              {mode === "signin" ? "Welcome Back" : "Join Us"}
+            </span>
+            <h1
+              style={{
+                fontFamily: "'Cinzel', 'Playfair Display', serif",
+                fontSize: "1.75rem",
+                fontWeight: 700,
+                margin: "0.5rem 0 0.5rem",
+                color: "#e8d5a3",
+              }}
+            >
+              {mode === "signin" ? "Sign In" : "Create Account"}
+            </h1>
+            <p style={{ color: "#555", fontSize: "0.85rem", margin: 0 }}>
+              {mode === "signin"
+                ? "Sign in with your mobile number & password"
+                : "Sign up with your mobile number"}
+            </p>
+          </div>
+        )}
 
         {/* Sign Up Form */}
-        {mode === "signup" && (
+        {mode === "signup" && !forgotMode && (
           <form onSubmit={signUp} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {/* Name */}
             <div style={{ position: "relative" }}>
@@ -190,14 +304,13 @@ export const AuthPage = () => {
                 className="input"
                 style={{ paddingLeft: "2.75rem", paddingRight: "2.75rem" }}
                 type={showPassword ? "text" : "password"}
-                placeholder="Password (min. 6 characters)"
+                placeholder="Strong Password"
                 name="password"
                 id="signup-password"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
               />
               <button
                 type="button"
@@ -208,6 +321,8 @@ export const AuthPage = () => {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+
+            <PasswordChecklist pass={password} />
 
             {alreadyExists && (
               <div style={{ background: "rgba(201,162,39,0.08)", border: "1px solid rgba(201,162,39,0.4)", borderRadius: "0.875rem", padding: "1rem 1.125rem" }}>
@@ -232,7 +347,7 @@ export const AuthPage = () => {
             <button
               className="btn-primary"
               type="submit"
-              disabled={busy || !phone.trim() || !name.trim() || !password.trim()}
+              disabled={busy || !phone.trim() || !name.trim() || !password.trim() || !Object.values(validatePassword(password)).every(Boolean)}
               style={{ marginTop: "0.5rem" }}
             >
               {busy ? "Creating account..." : "Create Account"}
@@ -251,7 +366,7 @@ export const AuthPage = () => {
         )}
 
         {/* Sign In Form */}
-        {mode === "signin" && (
+        {mode === "signin" && !forgotMode && (
           <form onSubmit={signIn} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {/* Phone */}
             <div style={{ position: "relative" }}>
@@ -299,6 +414,22 @@ export const AuthPage = () => {
               </button>
             </div>
 
+            {/* Forgot Password Link */}
+            <div style={{ textAlign: "right", marginTop: "-0.5rem" }}>
+              <button
+                type="button"
+                style={{ background: "none", border: "none", color: "#a08040", cursor: "pointer", fontSize: "0.8rem", padding: 0 }}
+                onClick={() => {
+                  setForgotMode(true);
+                  setResetStep(1);
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
+
             {error && (
               <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "0.75rem", padding: "0.75rem 1rem", color: "#ef4444", fontSize: "0.85rem" }}>
                 {error}
@@ -324,6 +455,151 @@ export const AuthPage = () => {
               </a>
             </p>
           </form>
+        )}
+
+        {/* Forgot Password Form */}
+        {forgotMode && (
+          <div>
+            {/* Forgot Password Header */}
+            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>🔑</div>
+              <span className="badge" style={{ marginBottom: "0.75rem", display: "inline-block" }}>
+                Password Recovery
+              </span>
+              <h1
+                style={{
+                  fontFamily: "'Cinzel', 'Playfair Display', serif",
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                  margin: "0.5rem 0 0.5rem",
+                  color: "#e8d5a3",
+                }}
+              >
+                Reset Password
+              </h1>
+              <p style={{ color: "#555", fontSize: "0.85rem", margin: 0 }}>
+                {resetStep === 1 && "Step 1: Enter your registered mobile number"}
+                {resetStep === 2 && "Step 2: Enter the 6-digit reset code"}
+                {resetStep === 3 && "Step 3: Choose a new strong password"}
+              </p>
+            </div>
+
+            {/* Error & Success Messages */}
+            {error && (
+              <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "0.75rem", padding: "0.75rem 1rem", color: "#ef4444", fontSize: "0.85rem", marginBottom: "1rem" }}>
+                {error}
+              </div>
+            )}
+            {successMessage && (
+              <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: "0.75rem", padding: "0.75rem 1rem", color: "#22c55e", fontSize: "0.85rem", marginBottom: "1rem" }}>
+                {successMessage}
+              </div>
+            )}
+
+            {/* STEP 1: Enter Phone Number */}
+            {resetStep === 1 && (
+              <form onSubmit={handleRequestCode} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", left: "0.875rem", top: "50%", transform: "translateY(-50%)", color: "#c9a227", pointerEvents: "none" }}>
+                    <Phone size={16} />
+                  </div>
+                  <input
+                    className="input"
+                    style={{ paddingLeft: "2.75rem" }}
+                    type="tel"
+                    placeholder="Mobile number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+                <button className="btn-primary" type="submit" disabled={busy || !phone.trim()}>
+                  {busy ? "Sending code..." : "Get Reset Code"}
+                </button>
+              </form>
+            )}
+
+            {/* STEP 2: Enter Verification Code */}
+            {resetStep === 2 && (
+              <form onSubmit={handleVerifyCode} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {receivedOtp && (
+                  <div style={{ background: "rgba(201,162,39,0.08)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.75rem", padding: "0.75rem 1rem", fontSize: "0.825rem", color: "#e8d5a3", textAlign: "left" }}>
+                    <strong>Test Sandbox Reset Code:</strong> <span style={{ color: "#c9a227", fontSize: "1.1rem", fontWeight: "700" }}>{receivedOtp}</span> (Simulated SMS OTP)
+                  </div>
+                )}
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", left: "0.875rem", top: "50%", transform: "translateY(-50%)", color: "#c9a227", pointerEvents: "none" }}>
+                    <Lock size={16} />
+                  </div>
+                  <input
+                    className="input"
+                    style={{ paddingLeft: "2.75rem" }}
+                    type="text"
+                    placeholder="Enter 6-digit code"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    required
+                  />
+                </div>
+                <button className="btn-primary" type="submit" disabled={busy || !resetCode.trim()}>
+                  {busy ? "Verifying..." : "Verify Code"}
+                </button>
+              </form>
+            )}
+
+            {/* STEP 3: Enter New Password */}
+            {resetStep === 3 && (
+              <form onSubmit={handleResetPassword} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", left: "0.875rem", top: "50%", transform: "translateY(-50%)", color: "#c9a227", pointerEvents: "none" }}>
+                    <Lock size={16} />
+                  </div>
+                  <input
+                    className="input"
+                    style={{ paddingLeft: "2.75rem", paddingRight: "2.75rem" }}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    style={{ position: "absolute", right: "0.875rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#555", cursor: "pointer", padding: 0 }}
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <PasswordChecklist pass={newPassword} />
+
+                <button
+                  className="btn-primary"
+                  type="submit"
+                  disabled={busy || !newPassword.trim() || !Object.values(validatePassword(newPassword)).every(Boolean)}
+                >
+                  {busy ? "Resetting password..." : "Set New Password"}
+                </button>
+              </form>
+            )}
+
+            {/* Back to Login link */}
+            <p style={{ textAlign: "center", color: "#555", fontSize: "0.85rem", margin: "1.5rem 0 0" }}>
+              Remember your password?{" "}
+              <button
+                type="button"
+                style={{ background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontWeight: 600, padding: 0 }}
+                onClick={() => {
+                  setForgotMode(false);
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+              >
+                Sign In
+              </button>
+            </p>
+          </div>
         )}
       </div>
     </div>

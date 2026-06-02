@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema(
     dob: { type: Date, default: null },
     gender: { type: String, enum: ["male", "female", "prefer_not_to_say", ""], default: "" },
     beautyUse: { type: String, trim: true, default: "" },
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );

@@ -34,3 +34,18 @@ export const updateProfile = async (data: { name: string; phone: string; dob?: s
   const response = await API.patch("/auth/profile", data);
   return response.data.user as Profile;
 };
+
+export const forgotPassword = async (phone: string) => {
+  const response = await API.post("/auth/forgot-password", { phone });
+  return response.data as { message: string; phone: string; otp?: string };
+};
+
+export const verifyResetCode = async (phone: string, code: string) => {
+  const response = await API.post("/auth/verify-reset-code", { phone, code });
+  return response.data as { message: string };
+};
+
+export const resetPassword = async (payload: { phone: string; code: string; newPassword: string }) => {
+  const response = await API.post("/auth/reset-password", payload);
+  return response.data as { message: string };
+};
