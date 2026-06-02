@@ -580,7 +580,7 @@ export const LandingPage = () => {
               Home visits available across the city • Salon open daily 10 AM – 8 PM
             </p>
             <a
-              href="https://www.google.com/maps/search/mani's+elite+makeover+hyderabad+telangana/@17.3151943,78.5773701,20z?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D"
+              href="https://maps.app.goo.gl/9EW1eoq4dqvFZ9ym7?g_st=ipc"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -614,7 +614,7 @@ export const LandingPage = () => {
             <iframe
               className="map-iframe"
               title="Mani's Elite Makeover Location"
-              src="https://maps.google.com/maps?q=17.3151943,78.5773701&t=&z=20&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=Mani's+Elite+Makeover,+Hyderabad&ftid=0x3bcba11fc48402b7:0xde42a5e89b712429&t=&z=17&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="380"
               style={{ border: 0, display: "block", width: "100%" }}
