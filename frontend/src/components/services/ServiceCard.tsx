@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Clock3, IndianRupee, Star, Sparkles, Home } from "lucide-react";
+import { Clock3, IndianRupee, Sparkles, Home } from "lucide-react";
 
 import type { Service } from "../../types/domain";
 
@@ -10,59 +10,149 @@ export const ServiceCard = ({
   service: Service;
   action?: ReactNode;
 }) => (
-  <article className="group relative overflow-hidden rounded-3xl border-2 border-gray-100 bg-white shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-purple-200 transform hover:-translate-y-1">
+  <article
+    style={{
+      position: "relative",
+      borderRadius: "1.5rem",
+      overflow: "hidden",
+      border: "1px solid rgba(201,162,39,0.2)",
+      background: "linear-gradient(145deg, #111111 0%, #0f0e00 100%)",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(201,162,39,0.06)",
+      transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
+      cursor: "default",
+    }}
+    onMouseEnter={(e) => {
+      const el = e.currentTarget as HTMLElement;
+      el.style.transform = "translateY(-6px)";
+      el.style.boxShadow = "0 20px 48px rgba(201,162,39,0.15), 0 4px 24px rgba(0,0,0,0.5)";
+      el.style.borderColor = "rgba(201,162,39,0.5)";
+    }}
+    onMouseLeave={(e) => {
+      const el = e.currentTarget as HTMLElement;
+      el.style.transform = "translateY(0)";
+      el.style.boxShadow = "0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(201,162,39,0.06)";
+      el.style.borderColor = "rgba(201,162,39,0.2)";
+    }}
+  >
+    {/* Image */}
     {service.image_url ? (
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={service.image_url} 
-          alt={service.name} 
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+      <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+        <img
+          src={service.image_url}
+          alt={service.name}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transition: "transform 0.5s ease",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1.08)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"; }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2">
-          <Sparkles className="h-4 w-4 text-purple-600" />
+        {/* Gradient overlay */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to top, #111111 0%, rgba(15,14,0,0.3) 60%, transparent 100%)",
+        }} />
+        {/* Sparkle badge */}
+        <div style={{
+          position: "absolute",
+          top: "0.75rem",
+          right: "0.75rem",
+          width: "32px",
+          height: "32px",
+          borderRadius: "50%",
+          background: "rgba(201,162,39,0.15)",
+          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(201,162,39,0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <Sparkles size={14} style={{ color: "#c9a227" }} />
         </div>
       </div>
     ) : (
-      <div className="h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-        <div className="bg-white/80 backdrop-blur-sm rounded-full p-4">
-          <Sparkles className="h-8 w-8 text-purple-600" />
+      <div style={{
+        height: "200px",
+        background: "linear-gradient(135deg, #1a1500 0%, #0f0d00 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "none",
+      }}>
+        <div style={{
+          width: "64px",
+          height: "64px",
+          borderRadius: "50%",
+          background: "rgba(201,162,39,0.1)",
+          border: "1px solid rgba(201,162,39,0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <Sparkles size={28} style={{ color: "#c9a227" }} />
         </div>
       </div>
     )}
-    
-    <div className="p-6 space-y-4">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-            {service.name}
-          </h3>
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-sm text-gray-600">4.8</span>
-          </div>
-        </div>
-        <p className="text-gray-600 leading-relaxed">{service.description}</p>
+
+    {/* Content */}
+    <div style={{ padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+      {/* Title row */}
+      <div>
+        <h3 style={{
+          fontFamily: "'Cinzel', 'Playfair Display', serif",
+          color: "#e8d5a3",
+          fontSize: "1.1rem",
+          fontWeight: 700,
+          margin: "0 0 0.375rem",
+          lineHeight: 1.3,
+        }}>
+          {service.name}
+        </h3>
+        <p style={{
+          color: "#666",
+          fontSize: "0.8rem",
+          lineHeight: 1.6,
+          margin: 0,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}>
+          {service.description}
+        </p>
       </div>
-      
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-        <div className="flex items-center gap-1">
-          <IndianRupee className="h-5 w-5 text-green-600" />
-          <span className="text-xl font-bold text-gray-900">{service.price}</span>
+
+      {/* Divider */}
+      <div style={{ height: "1px", background: "linear-gradient(90deg, rgba(201,162,39,0.25), transparent)" }} />
+
+      {/* Price & Duration row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <IndianRupee size={16} style={{ color: "#c9a227" }} />
+          <span style={{ color: "#c9a227", fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Cinzel', serif" }}>
+            {service.price}
+          </span>
         </div>
-        <div className="flex items-center gap-1 text-gray-600">
-          <Clock3 className="h-4 w-4" />
-          <span className="text-sm font-medium">{service.duration_min} min</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#555", fontSize: "0.8rem" }}>
+          <Clock3 size={13} />
+          <span>{service.duration_min} min</span>
         </div>
       </div>
-      
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Home className="h-3 w-3" />
-        <span>Home Service Available</span>
+
+      {/* Home service badge */}
+      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <Home size={12} style={{ color: "#c9a227" }} />
+        <span style={{ color: "#c9a227", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.05em" }}>
+          HOME SERVICE AVAILABLE
+        </span>
       </div>
-      
+
+      {/* Action */}
       {action && (
-        <div className="pt-2">
+        <div style={{ marginTop: "0.25rem" }}>
           {action}
         </div>
       )}

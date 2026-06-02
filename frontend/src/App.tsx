@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { Footer } from "./components/layout/Footer";
 import { Navbar } from "./components/layout/Navbar";
+import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { AdminRoute } from "./components/routes/AdminRoute";
 import { ProtectedRoute } from "./components/routes/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -16,6 +17,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#0a0a0a", overflowX: "hidden", width: "100%" }}>
           <Navbar />

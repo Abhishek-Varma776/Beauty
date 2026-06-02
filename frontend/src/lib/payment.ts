@@ -7,6 +7,7 @@ interface CheckoutInput {
   description: string;
   customerName?: string;
   customerContact?: string;
+  customerEmail?: string;
 }
 
 export const loadRazorpayScript = () => {
@@ -24,38 +25,49 @@ export const loadRazorpayScript = () => {
 };
 
 export const openRazorpayCheckout = (input: CheckoutInput) => {
-  return new Promise<any>((resolve, reject) => {
+  return new Promise<{
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }>((resolve, reject) => {
     const options = {
-      key: input.key || "rzp_test_placeholder",
+      key: input.key,
       amount: input.amount,
-      currency: input.currency,
+      currency: input.currency || "INR",
       name: input.name,
       description: input.description,
-      // If orderId is simulated (e.g. order_123) rather than a real Razorpay Order ID created in the backend,
-      // Razorpay checkout will run in payment-bypass mode. If it's a real order ID, it handles live payment verification.
-      order_id: input.orderId.startsWith("order_") ? undefined : input.orderId,
+      // Always pass the real Razorpay order_id from backend
+      order_id: input.orderId,
       handler: (response: any) => {
         resolve({
-          razorpay_order_id: response.razorpay_order_id || input.orderId,
+          razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature || "live_signature",
+          razorpay_signature: response.razorpay_signature,
         });
       },
       prefill: {
         name: input.customerName || "",
         contact: input.customerContact || "",
+        email: input.customerEmail || "",
       },
       theme: {
-        color: "#c9a227", // Mani's Elite Gold Theme color!
+        color: "#c9a227", // Mani's Elite Gold
       },
       modal: {
         ondismiss: () => {
-          reject(new Error("Payment cancelled by user."));
+          reject(new Error("Payment was cancelled. Please try again."));
         },
+        escape: true,
+        animation: true,
       },
     };
 
     const rzp = new (window as any).Razorpay(options);
+
+    rzp.on("payment.failed", (response: any) => {
+      reject(new Error(response.error?.description || "Payment failed. Please try again."));
+    });
+
     rzp.open();
   });
 };

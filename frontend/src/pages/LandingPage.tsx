@@ -7,7 +7,6 @@ import { ServiceCard } from "../components/services/ServiceCard";
 import { useAuth } from "../context/AuthContext";
 import { fetchActiveServices } from "../lib/queries";
 import type { Service } from "../types/domain";
-import { BACKEND_URL } from "../api/axios";
 
 export const LandingPage = () => {
   const { profile } = useAuth();
@@ -262,54 +261,62 @@ export const LandingPage = () => {
             </motion.div>
           </div>
 
-          <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 310px), 1fr))" }}>
-            {services.map((service, index) => {
-              let activeImage = service.image_url;
-              const nameNorm = service.name.trim().toLowerCase();
-              
-              if (nameNorm === "hair color") {
-                activeImage = `${BACKEND_URL}/uploads/hair-color.png`;
-              } else if (nameNorm === "full face threading") {
-                activeImage = `${BACKEND_URL}/uploads/full-face-threading.png`;
-              } else if (nameNorm === "cleanup") {
-                activeImage = `${BACKEND_URL}/uploads/cleanup.png`;
-              } else if (nameNorm === "pedicure") {
-                activeImage = `${BACKEND_URL}/uploads/pedicure.png`;
-              } else if (nameNorm === "upper lip") {
-                activeImage = `${BACKEND_URL}/uploads/upper-lip.png`;
-              } else if (nameNorm === "eyebrows") {
-                activeImage = `${BACKEND_URL}/uploads/eyebrows.png`;
-              } else if (nameNorm === "manicure") {
-                activeImage = `${BACKEND_URL}/uploads/manicure.png`;
-              } else if (nameNorm === "saree draping") {
-                activeImage = `${BACKEND_URL}/uploads/saree-draping.png`;
-              }
+          {profile ? (
+            <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 310px), 1fr))" }}>
+              {services.map((service, index) => {
+                let activeImage = service.image_url;
+                const nameNorm = service.name.trim().toLowerCase();
 
-              const displayService = { ...service, image_url: activeImage };
+                if (nameNorm === "hair color") {
+                  activeImage = "/images/services/hair-color.png";
+                } else if (nameNorm === "full face threading") {
+                  activeImage = "/images/services/full-face-threading.png";
+                } else if (nameNorm === "cleanup") {
+                  activeImage = "/images/services/cleanup.png";
+                } else if (nameNorm === "pedicure") {
+                  activeImage = "/images/services/pedicure.png";
+                } else if (nameNorm === "upper lip") {
+                  activeImage = "/images/services/upper-lip.png";
+                } else if (nameNorm === "eyebrows") {
+                  activeImage = "/images/services/eyebrows.png";
+                } else if (nameNorm === "manicure") {
+                  activeImage = "/images/services/manicure.png";
+                } else if (nameNorm === "saree draping") {
+                  activeImage = "/images/services/saree-draping.png";
+                } else if (nameNorm === "bridal makeup") {
+                  activeImage = "/images/services/bridal-makeup.png";
+                } else if (nameNorm === "facial") {
+                  activeImage = "/images/services/facial.png";
+                } else if (nameNorm === "hair cut") {
+                  activeImage = "/images/services/hair-cut.png";
+                }
 
-              return (
-                <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.08 }}
-                >
-                  <ServiceCard
-                    service={displayService}
-                    action={
-                      <Link
-                        className="btn-primary"
-                        style={{ width: "100%", textDecoration: "none" }}
-                        to={`/book/${service.id}`}
-                      >
-                        Book Now
-                      </Link>
-                    }
-                  />
-                </motion.div>
-              );
-            })}
-          </div>
+                const displayService = { ...service, image_url: activeImage };
+
+                return (
+                  <motion.div
+                    key={service.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.08 }}
+                  >
+                    <ServiceCard
+                      service={displayService}
+                      action={
+                        <Link
+                          className="btn-primary"
+                          style={{ width: "100%", textDecoration: "none" }}
+                          to={`/book/${service.id}`}
+                        >
+                          Book Now
+                        </Link>
+                      }
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : null}
 
           {!profile && (
             <motion.div

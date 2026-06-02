@@ -15,7 +15,6 @@ import {
 } from "../lib/queries";
 import { openRazorpayCheckout, loadRazorpayScript } from "../lib/payment";
 import type { PaymentType, Service, SlotOption } from "../types/domain";
-import { BACKEND_URL } from "../api/axios";
 
 export const BookingPage = () => {
   const { serviceId } = useParams();
@@ -51,17 +50,27 @@ export const BookingPage = () => {
         const nameNorm = found.name.trim().toLowerCase();
         
         if (nameNorm === "hair color") {
-          activeImage = `${BACKEND_URL}/uploads/hair-color.png`;
+          activeImage = "/images/services/hair-color.png";
         } else if (nameNorm === "full face threading") {
-          activeImage = `${BACKEND_URL}/uploads/full-face-threading.png`;
+          activeImage = "/images/services/full-face-threading.png";
         } else if (nameNorm === "cleanup") {
-          activeImage = `${BACKEND_URL}/uploads/cleanup.png`;
+          activeImage = "/images/services/cleanup.png";
         } else if (nameNorm === "pedicure") {
-          activeImage = `${BACKEND_URL}/uploads/pedicure.png`;
+          activeImage = "/images/services/pedicure.png";
         } else if (nameNorm === "upper lip") {
-          activeImage = `${BACKEND_URL}/uploads/upper-lip.png`;
+          activeImage = "/images/services/upper-lip.png";
         } else if (nameNorm === "eyebrows") {
-          activeImage = `${BACKEND_URL}/uploads/eyebrows.png`;
+          activeImage = "/images/services/eyebrows.png";
+        } else if (nameNorm === "manicure") {
+          activeImage = "/images/services/manicure.png";
+        } else if (nameNorm === "saree draping") {
+          activeImage = "/images/services/saree-draping.png";
+        } else if (nameNorm === "bridal makeup") {
+          activeImage = "/images/services/bridal-makeup.png";
+        } else if (nameNorm === "facial") {
+          activeImage = "/images/services/facial.png";
+        } else if (nameNorm === "hair cut") {
+          activeImage = "/images/services/hair-cut.png";
         }
 
         setService({ ...found, image_url: activeImage });

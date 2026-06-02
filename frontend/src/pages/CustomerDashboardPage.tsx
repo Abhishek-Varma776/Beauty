@@ -9,7 +9,6 @@ import { canCancelBooking, formatBookingDateTime } from "../lib/booking";
 import { cancelBooking, fetchCustomerBookings, fetchActiveServices, seedDefaultServicesIfEmpty } from "../lib/queries";
 import { seededServices } from "../lib/seed";
 import type { Booking, Service } from "../types/domain";
-import { BACKEND_URL } from "../api/axios";
 
 type Tab = "services" | "bookings" | "profile" | "settings";
 
@@ -270,21 +269,27 @@ export const CustomerDashboardPage = () => {
                   const nameNorm = service.name.trim().toLowerCase();
                   
                   if (nameNorm === "hair color") {
-                    activeImage = `${BACKEND_URL}/uploads/hair-color.png`;
+                    activeImage = "/images/services/hair-color.png";
                   } else if (nameNorm === "full face threading") {
-                    activeImage = `${BACKEND_URL}/uploads/full-face-threading.png`;
+                    activeImage = "/images/services/full-face-threading.png";
                   } else if (nameNorm === "cleanup") {
-                    activeImage = `${BACKEND_URL}/uploads/cleanup.png`;
+                    activeImage = "/images/services/cleanup.png";
                   } else if (nameNorm === "pedicure") {
-                    activeImage = `${BACKEND_URL}/uploads/pedicure.png`;
+                    activeImage = "/images/services/pedicure.png";
                   } else if (nameNorm === "upper lip") {
-                    activeImage = `${BACKEND_URL}/uploads/upper-lip.png`;
+                    activeImage = "/images/services/upper-lip.png";
                   } else if (nameNorm === "eyebrows") {
-                    activeImage = `${BACKEND_URL}/uploads/eyebrows.png`;
+                    activeImage = "/images/services/eyebrows.png";
                   } else if (nameNorm === "manicure") {
-                    activeImage = `${BACKEND_URL}/uploads/manicure.png`;
+                    activeImage = "/images/services/manicure.png";
                   } else if (nameNorm === "saree draping") {
-                    activeImage = `${BACKEND_URL}/uploads/saree-draping.png`;
+                    activeImage = "/images/services/saree-draping.png";
+                  } else if (nameNorm === "bridal makeup") {
+                    activeImage = "/images/services/bridal-makeup.png";
+                  } else if (nameNorm === "facial") {
+                    activeImage = "/images/services/facial.png";
+                  } else if (nameNorm === "hair cut") {
+                    activeImage = "/images/services/hair-cut.png";
                   }
 
                   const displayService = {

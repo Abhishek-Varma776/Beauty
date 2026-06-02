@@ -15,6 +15,8 @@ const bookingSchema = new mongoose.Schema(
       default: "not_required",
     },
     notes: { type: String, trim: true, default: "" },
+    razorpay_order_id: { type: String, default: null },
+    razorpay_payment_id: { type: String, default: null },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
