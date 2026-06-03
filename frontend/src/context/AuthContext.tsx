@@ -68,12 +68,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem(profileKey, JSON.stringify(userProfile));
         setSession(nextSession);
         setProfile(userProfile);
-      } catch {
-        localStorage.removeItem(tokenKey);
-        localStorage.removeItem(sessionKey);
-        localStorage.removeItem(profileKey);
-        setSession(null);
-        setProfile(null);
+      } catch (err: unknown) {
+        // Only clear the session on a genuine 401 (invalid/expired token).
+        // For network errors (server cold-starting on Render, timeouts, etc.)
+        // we keep the stored session so the user stays logged in.
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 401) {
+          localStorage.removeItem(tokenKey);
+          localStorage.removeItem(sessionKey);
+          localStorage.removeItem(profileKey);
+          setSession(null);
+          setProfile(null);
+        }
+        // On network error / 5xx — silently keep existing stored session
       } finally {
         setLoading(false);
       }
