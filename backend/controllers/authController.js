@@ -54,9 +54,15 @@ exports.login = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ phone: phone.trim() }).select("+password");
 
-  if (!user || !(await user.matchPassword(password))) {
+  if (!user) {
     res.status(401);
-    throw new Error("Invalid phone number or password");
+    throw new Error("No account found with this phone number. Please check the number or sign up.");
+  }
+
+  const passwordMatch = await user.matchPassword(password);
+  if (!passwordMatch) {
+    res.status(401);
+    throw new Error("Incorrect password. Please try again or use Forgot Password to reset it.");
   }
 
   res.json({ token: generateToken(user.id), user: serializeUser(user) });
