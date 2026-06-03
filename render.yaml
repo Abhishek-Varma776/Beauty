@@ -1,0 +1,31 @@
+services:
+  # ─── Frontend (React SPA on Render Static Site) ────────────────────────────
+  - type: web
+    name: beauty-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://beauty-backend-8i3u.onrender.com/api
+
+  # ─── Backend (Node.js Express API) ─────────────────────────────────────────
+  - type: web
+    name: beauty-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CLIENT_URL
+        value: https://beauty-frontend-8i3u.onrender.com
