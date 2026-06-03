@@ -249,7 +249,7 @@ export const BookingForm = ({
                   <p style={{ color: paymentType === "online" ? "#e8d5a3" : "#888", fontWeight: 600, margin: 0, fontSize: "0.9rem" }}>
                     Pay Online
                   </p>
-                  <p style={{ color: "#555", margin: 0, fontSize: "0.72rem" }}>Secure payment via Razorpay</p>
+                  <p style={{ color: "#555", margin: 0, fontSize: "0.72rem" }}>Secure payment via PhonePe</p>
                 </div>
               </div>
               {paymentType === "online" && (
@@ -371,7 +371,7 @@ export const BookingForm = ({
         {/* Security note */}
         {paymentType === "online" && (
           <p style={{ color: "#444", fontSize: "0.72rem", textAlign: "center", margin: 0 }}>
-            🔐 Secured by Razorpay — 256-bit SSL encryption
+            🔐 Secured by PhonePe — 256-bit SSL encryption
           </p>
         )}
       </div>

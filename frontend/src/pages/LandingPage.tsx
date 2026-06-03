@@ -110,7 +110,7 @@ export const LandingPage = () => {
                 margin: "0 0 1.5rem",
               }}
             >
-              Makeover
+              Makeover Studio
             </h1>
 
             <p style={{ color: "#888", fontSize: "1.1rem", maxWidth: "540px", margin: "0 auto 2rem", lineHeight: 1.7 }}>
@@ -355,7 +355,7 @@ export const LandingPage = () => {
         <div className="section-shell">
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 className="text-gold-gradient" style={{ fontFamily: "'Cinzel', serif", fontSize: "clamp(1.6rem, 3.5vw, 2.5rem)", fontWeight: 700 }}>
-              Why Mani's Elite?
+              Why Mani's Elite Makeover Studio?
             </h2>
           </div>
           <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))" }}>
@@ -613,7 +613,7 @@ export const LandingPage = () => {
           >
             <iframe
               className="map-iframe"
-              title="Mani's Elite Makeover Location"
+              title="Mani's Elite Makeover Studio Location"
               src="https://maps.google.com/maps?q=Mani's+Elite+Makeover,+Hyderabad&ftid=0x3bcba11fc48402b7:0xde42a5e89b712429&t=&z=17&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="380"

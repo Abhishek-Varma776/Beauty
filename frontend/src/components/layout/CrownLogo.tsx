@@ -6,7 +6,7 @@ export const CrownLogo = () => {
   return (
     <button
       onClick={() => navigate("/")}
-      title="Mani's Elite Makeover — Home"
+      title="Mani's Elite Makeover Studio — Home"
       style={{
         background: "none",
         border: "none",
@@ -110,7 +110,7 @@ export const CrownLogo = () => {
           Mani's Elite
         </span>
         <span style={{ color: "#e8d5a3", fontSize: "0.7rem", letterSpacing: "0.18em", fontWeight: 400 }}>
-          MAKEOVER
+          MAKEOVER STUDIO
         </span>
       </span>
     </button>

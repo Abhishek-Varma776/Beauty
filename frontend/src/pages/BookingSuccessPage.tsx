@@ -1,33 +1,67 @@
 import { format, parseISO } from "date-fns";
-import { CheckCircle2, Calendar, Clock, CreditCard, Home, Store } from "lucide-react";
+import { CheckCircle2, Calendar, Clock, CreditCard, Home, Store, Loader2, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 
-import { fetchBookingById } from "../lib/queries";
+import { fetchBookingById, verifyPaymentAndConfirm } from "../lib/queries";
 import type { Booking } from "../types/domain";
 
 export const BookingSuccessPage = () => {
   const { bookingId } = useParams();
+  const [searchParams] = useSearchParams();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!bookingId) return;
+
+    const txn = searchParams.get("txn");
+
     const load = async () => {
       setLoading(true);
-      try {
-        setBooking(await fetchBookingById(bookingId));
-      } finally {
-        setLoading(false);
+
+      // If the user was redirected back from PhonePe with a txn param, verify payment first
+      if (txn) {
+        setVerifying(true);
+        try {
+          const confirmed = await verifyPaymentAndConfirm({
+            bookingId,
+            razorpayOrderId: txn,
+          });
+          setBooking(confirmed);
+        } catch (err) {
+          setVerifyError(err instanceof Error ? err.message : "Payment verification failed.");
+          // Still load booking details even if verify fails
+          try {
+            setBooking(await fetchBookingById(bookingId));
+          } catch {
+            // ignore secondary error
+          }
+        } finally {
+          setVerifying(false);
+        }
+      } else {
+        // Normal success page load (cash or simulated PhonePe)
+        try {
+          setBooking(await fetchBookingById(bookingId));
+        } catch {
+          // ignore
+        }
       }
+
+      setLoading(false);
     };
+
     void load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   return (
     <div style={{ background: "#0a0a0a", minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem 1rem" }}>
-      {/* Gold glow background */}
+      {/* Glow background */}
       <div style={{ position: "fixed", top: "30%", left: "50%", transform: "translateX(-50%)", width: "400px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
       <motion.div
@@ -99,7 +133,26 @@ export const BookingSuccessPage = () => {
 
         {/* Booking Details */}
         <div style={{ padding: "1.75rem 2rem" }}>
-          {loading ? (
+          {/* Verifying spinner */}
+          {verifying && (
+            <div style={{ textAlign: "center", padding: "1.5rem", color: "#c9a227", fontSize: "0.875rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+              <Loader2 size={28} style={{ animation: "spin 0.8s linear infinite", color: "#c9a227" }} />
+              <span>Verifying your PhonePe payment…</span>
+            </div>
+          )}
+
+          {/* Verify error */}
+          {verifyError && !verifying && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", padding: "0.875rem 1rem", borderRadius: "0.75rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", marginBottom: "1rem" }}>
+              <AlertCircle size={18} style={{ color: "#ef4444", flexShrink: 0, marginTop: "1px" }} />
+              <div>
+                <p style={{ color: "#ef4444", fontWeight: 600, margin: "0 0 2px", fontSize: "0.85rem" }}>Payment Verification Issue</p>
+                <p style={{ color: "#aaa", margin: 0, fontSize: "0.78rem" }}>{verifyError}</p>
+              </div>
+            </div>
+          )}
+
+          {loading && !verifying ? (
             <div style={{ textAlign: "center", padding: "2rem", color: "#555", fontSize: "0.875rem" }}>
               <div style={{ width: "24px", height: "24px", borderRadius: "50%", border: "2px solid #c9a227", borderTopColor: "transparent", animation: "spin 0.8s linear infinite", margin: "0 auto 0.75rem" }} />
               Loading booking summary…
@@ -135,7 +188,7 @@ export const BookingSuccessPage = () => {
                 {
                   icon: <CreditCard size={15} style={{ color: "#c9a227" }} />,
                   label: "Payment",
-                  value: `${booking.payment_type === "online" ? "Online (Razorpay)" : "Cash After Service"} — ${booking.payment_status}`,
+                  value: `${booking.payment_type === "online" ? "Online (PhonePe)" : "Cash After Service"} — ${booking.payment_status}`,
                 },
               ].map((row) => (
                 <div

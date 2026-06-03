@@ -82,7 +82,7 @@ export const AdminDashboardPage = () => {
             Welcome, <span className="text-gold-gradient">{profile?.name}</span>
           </h1>
           <p style={{ color: "#555", fontSize: "0.875rem", margin: 0 }}>
-            Mani's Elite Makeover — Admin Control Panel
+            Mani's Elite Makeover Studio — Admin Control Panel
           </p>
         </motion.div>
 

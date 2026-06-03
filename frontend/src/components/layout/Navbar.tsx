@@ -77,7 +77,7 @@ export const Navbar = () => {
             margin: 0,
           }}
         >
-          MANI'S ELITE MAKEOVER — Premium Beauty Services
+          MANI'S ELITE MAKEOVER STUDIO — Premium Beauty Services
         </p>
         <span style={{ fontSize: "0.65rem", color: "#888", flexShrink: 0 }}>✦</span>
       </div>

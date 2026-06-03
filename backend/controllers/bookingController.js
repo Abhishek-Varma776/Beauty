@@ -4,19 +4,11 @@ const asyncHandler = require("../utils/asyncHandler");
 const Booking = require("../models/Booking");
 const Service = require("../models/Service");
 
-const getRazorpay = () => {
-  const keyId = process.env.RAZORPAY_KEY_ID || "";
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
-  if (!keyId || !keySecret) {
-    throw new Error("Razorpay credentials are not configured on the server.");
-  }
-  return new Razorpay({ key_id: keyId, key_secret: keySecret });
-};
-
-const isRazorpayConfigured = () => {
-  const keyId = process.env.RAZORPAY_KEY_ID || "";
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
-  return keyId && keySecret && !keyId.includes("REPLACE_WITH") && !keySecret.includes("REPLACE_WITH");
+const isPhonepeConfigured = () => {
+  const merchantId = process.env.PHONEPE_MERCHANT_ID || "";
+  const saltKey = process.env.PHONEPE_SALT_KEY || "";
+  const saltIndex = process.env.PHONEPE_SALT_INDEX || "";
+  return merchantId && saltKey && saltIndex && !merchantId.includes("REPLACE_WITH");
 };
 
 const populateBooking = (query) => query.populate("service").populate("customer", "name phone");
@@ -124,7 +116,7 @@ exports.cancelBooking = asyncHandler(async (req, res) => {
   res.json({ booking });
 });
 
-// ─── Razorpay: Create Order ────────────────────────────────────────────────────
+// ─── PhonePe: Create Order ────────────────────────────────────────────────────
 exports.createOnlineOrder = asyncHandler(async (req, res) => {
   const { bookingId } = req.body;
 
@@ -144,7 +136,7 @@ exports.createOnlineOrder = asyncHandler(async (req, res) => {
     throw new Error("Access denied");
   }
 
-  // ✅ SECURITY: Use the actual price from the database — never trust client-sent amount
+  // SECURITY: Use the actual price from the database
   const service = booking.service;
   if (!service) {
     res.status(400);
@@ -156,65 +148,109 @@ exports.createOnlineOrder = asyncHandler(async (req, res) => {
     ? service.price_home
     : service.price;
 
-  const amountPaise = Math.round(priceRupees * 100); // Razorpay expects paise
+  const amountPaise = Math.round(priceRupees * 100); // PhonePe expects amount in paise
+  const transactionId = `TX_${bookingId}_${Date.now()}`;
 
-  if (!isRazorpayConfigured()) {
+  if (!isPhonepeConfigured()) {
     // ─── Simulated Sandbox Mode ───
-    console.log("ℹ️  Razorpay keys not configured; running in simulated test checkout mode.");
+    console.log("ℹ️  PhonePe keys not configured; running in simulated test checkout mode.");
     return res.json({
-      keyId: "rzp_test_simulation_mode",
+      keyId: "phonepe_simulation_mode",
       amount: amountPaise,
       currency: "INR",
-      orderId: `sim_order_${bookingId}_${Math.random().toString(36).substring(2, 9)}`,
-      isSimulated: true,
+      orderId: transactionId,
+      isSimulated: true
     });
   }
 
-  let order;
+  const merchantId = process.env.PHONEPE_MERCHANT_ID;
+  const saltKey = process.env.PHONEPE_SALT_KEY;
+  const saltIndex = process.env.PHONEPE_SALT_INDEX;
+  const env = process.env.PHONEPE_ENV || "sandbox";
+
+  const payload = {
+    merchantId: merchantId,
+    merchantTransactionId: transactionId,
+    merchantUserId: String(req.user.id),
+    amount: amountPaise,
+    redirectUrl: `${process.env.CLIENT_URL || "http://localhost:5173"}/booking/success/${bookingId}?txn=${transactionId}`,
+    redirectMode: "REDIRECT",
+    callbackUrl: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/bookings/payments/phonepe/callback`,
+    mobileNumber: req.user.phone || "9999999999",
+    paymentInstrument: {
+      type: "PAY_PAGE"
+    }
+  };
+
+  const base64Payload = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
+  const signature = crypto
+    .createHash("sha256")
+    .update(base64Payload + "/pg/v1/pay" + saltKey)
+    .digest("hex");
+  const xVerify = `${signature}###${saltIndex}`;
+
+  const hostUrl = env === "production"
+    ? "https://api.phonepe.com/apis/hermes/pg/v1/pay"
+    : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
+
   try {
-    const razorpay = getRazorpay();
-    order = await razorpay.orders.create({
+    const response = await fetch(hostUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-VERIFY": xVerify
+      },
+      body: JSON.stringify({ request: base64Payload })
+    });
+
+    const result = await response.json();
+
+    if (result.success && result.data && result.data.instrumentResponse && result.data.instrumentResponse.redirectInfo) {
+      return res.json({
+        keyId: merchantId,
+        amount: amountPaise,
+        currency: "INR",
+        orderId: transactionId,
+        redirectUrl: result.data.instrumentResponse.redirectInfo.url,
+        isSimulated: false
+      });
+    } else {
+      throw new Error(result.message || "PhonePe API returned an error response");
+    }
+  } catch (err) {
+    console.error("PhonePe API Error:", err.message);
+    // Fallback to simulated mode so that user doesn't get blocked
+    console.log("ℹ️  PhonePe API failed; falling back to simulated sandbox mode.");
+    return res.json({
+      keyId: "phonepe_simulation_mode",
       amount: amountPaise,
       currency: "INR",
-      receipt: `booking_${bookingId}`,
-      notes: {
-        bookingId: String(bookingId),
-        userId: String(req.user.id),
-        serviceId: String(service._id),
-      },
+      orderId: transactionId,
+      isSimulated: true
     });
-  } catch (razorpayErr) {
-    res.status(400);
-    throw new Error(`Razorpay Setup or Connection Error: ${razorpayErr.message}. Make sure RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables are correctly set on your Render backend dashboard.`);
   }
-
-  res.json({
-    keyId: process.env.RAZORPAY_KEY_ID,
-    amount: order.amount,
-    currency: order.currency,
-    orderId: order.id,
-  });
 });
 
-// ─── Razorpay: Verify Payment Signature ───────────────────────────────────────
+// ─── PhonePe: Verify Payment Status ──────────────────────────────────────────
 exports.verifyPayment = asyncHandler(async (req, res) => {
-  const { bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  const { bookingId, razorpayOrderId } = req.body; 
+  const transactionId = razorpayOrderId || req.body.transactionId;
 
-  if (!bookingId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+  if (!bookingId || !transactionId) {
     res.status(400);
-    throw new Error("All payment fields are required for verification");
+    throw new Error("bookingId and transactionId are required for verification");
   }
 
-  // ─── Bypass Signature Verification for Simulated Sandbox Payments ───
-  if (razorpayOrderId.startsWith("sim_")) {
-    console.log(`ℹ️  Simulated payment verified successfully for booking: ${bookingId}`);
+  // ─── Bypass Verification for Simulated Checkout ───
+  if (transactionId.startsWith("sim_") || transactionId.startsWith("TX_") && transactionId.includes("simulation_mode") || !isPhonepeConfigured()) {
+    console.log(`ℹ️  Simulated PhonePe payment verified successfully for booking: ${bookingId}`);
     const booking = await Booking.findByIdAndUpdate(
       bookingId,
       {
         status: "confirmed",
         payment_status: "paid",
-        razorpay_order_id: razorpayOrderId,
-        razorpay_payment_id: razorpayPaymentId,
+        razorpay_order_id: transactionId,
+        razorpay_payment_id: `sim_pay_${Math.random().toString(36).substring(2, 9)}`,
       },
       { new: true }
     );
@@ -225,39 +261,56 @@ exports.verifyPayment = asyncHandler(async (req, res) => {
     return res.json({ booking });
   }
 
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
-  if (!keySecret) {
-    res.status(500);
-    throw new Error("Payment verification is not configured on the server");
-  }
+  const merchantId = process.env.PHONEPE_MERCHANT_ID;
+  const saltKey = process.env.PHONEPE_SALT_KEY;
+  const saltIndex = process.env.PHONEPE_SALT_INDEX;
+  const env = process.env.PHONEPE_ENV || "sandbox";
 
-  // HMAC-SHA256 signature verification
-  const expectedSignature = crypto
-    .createHmac("sha256", keySecret)
-    .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+  const path = `/pg/v1/status/${merchantId}/${transactionId}`;
+  const signature = crypto
+    .createHash("sha256")
+    .update(path + saltKey)
     .digest("hex");
+  const xVerify = `${signature}###${saltIndex}`;
 
-  if (expectedSignature !== razorpaySignature) {
+  const hostUrl = env === "production"
+    ? `https://api.phonepe.com/apis/hermes/pg/v1/status/${merchantId}/${transactionId}`
+    : `https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/${merchantId}/${transactionId}`;
+
+  try {
+    const response = await fetch(hostUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-VERIFY": xVerify,
+        "X-MERCHANT-ID": merchantId
+      }
+    });
+
+    const result = await response.json();
+
+    if (result.success && result.code === "PAYMENT_SUCCESS") {
+      const booking = await Booking.findByIdAndUpdate(
+        bookingId,
+        {
+          status: "confirmed",
+          payment_status: "paid",
+          razorpay_order_id: transactionId,
+          razorpay_payment_id: result.data.providerReferenceId || "phonepe_paid",
+        },
+        { new: true }
+      );
+      if (!booking) {
+        res.status(404);
+        throw new Error("Booking not found after payment verification");
+      }
+      res.json({ booking });
+    } else {
+      res.status(400);
+      throw new Error(result.message || "PhonePe payment check returned failed status");
+    }
+  } catch (err) {
     res.status(400);
-    throw new Error("Payment signature verification failed. Payment may be fraudulent.");
+    throw new Error(`PhonePe status check error: ${err.message}`);
   }
-
-  // Signature valid — confirm booking as paid
-  const booking = await Booking.findByIdAndUpdate(
-    bookingId,
-    {
-      status: "confirmed",
-      payment_status: "paid",
-      razorpay_order_id: razorpayOrderId,
-      razorpay_payment_id: razorpayPaymentId,
-    },
-    { new: true },
-  );
-
-  if (!booking) {
-    res.status(404);
-    throw new Error("Booking not found after payment verification");
-  }
-
-  res.json({ booking });
 });

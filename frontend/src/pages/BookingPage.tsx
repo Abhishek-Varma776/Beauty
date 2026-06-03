@@ -5,7 +5,6 @@ import { Home, Store } from "lucide-react";
 
 import { BookingForm } from "../components/booking/BookingForm";
 import { useAuth } from "../context/AuthContext";
-import { env } from "../lib/env";
 import {
   createBooking,
   createOnlineOrder,
@@ -13,13 +12,13 @@ import {
   fetchServiceById,
   verifyPaymentAndConfirm,
 } from "../lib/queries";
-import { openRazorpayCheckout, loadRazorpayScript } from "../lib/payment";
+import { openPhonepeCheckout } from "../lib/payment";
 import type { PaymentType, Service, SlotOption } from "../types/domain";
 
 export const BookingPage = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { user, session, profile } = useAuth();
+  const { user, session } = useAuth();
 
   const [service, setService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -137,11 +136,6 @@ export const BookingPage = () => {
         throw new Error("Session expired. Please log in again.");
       }
 
-      const sdkLoaded = await loadRazorpayScript();
-      if (!sdkLoaded) {
-        throw new Error("Unable to load Razorpay SDK.");
-      }
-
       const currentPrice = serviceType === "home" ? (service.price_home || service.price) : service.price;
 
       const order = await createOnlineOrder({
@@ -150,15 +144,23 @@ export const BookingPage = () => {
         accessToken: session.access_token,
       });
 
-      const paymentResult = await openRazorpayCheckout({
-        key: order.keyId || env.razorpayKeyId,
+      // PhonePe redirect flow: if backend returns a real redirectUrl, navigate away.
+      // The user will come back to /booking/success/:bookingId?txn=TX_... and verification happens there.
+      if (!order.isSimulated && order.redirectUrl) {
+        window.location.href = order.redirectUrl;
+        return;
+      }
+
+      // Simulated/sandbox overlay flow
+      const paymentResult = await openPhonepeCheckout({
+        key: order.keyId,
         amount: order.amount,
         currency: order.currency,
         orderId: order.orderId,
-        name: "Mani's Elite Makeover",
+        name: "Mani's Elite Makeover Studio",
         description: `${service.name} appointment booking`,
-        customerName: profile?.name,
-        customerContact: profile?.phone,
+        redirectUrl: order.redirectUrl,
+        isSimulated: order.isSimulated,
       });
 
       await verifyPaymentAndConfirm({
