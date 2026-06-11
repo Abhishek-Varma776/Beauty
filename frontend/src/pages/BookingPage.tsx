@@ -5,11 +5,11 @@ import { Home, Store, MapPin } from "lucide-react";
 
 import { BookingForm } from "../components/booking/BookingForm";
 import { useAuth } from "../context/AuthContext";
-import {
   createBooking,
   fetchAvailableSlots,
   fetchServiceById,
   confirmUpiPayment,
+  cancelBooking,
 } from "../lib/queries";
 import {
   openUPICheckout,
@@ -148,14 +148,21 @@ export const BookingPage = () => {
       const totalAmount = basePrice + deliveryCharge;
       const description = `${service.name} booking${deliveryCharge > 0 ? ` + ₹${deliveryCharge} home visit` : ""}`;
 
-      const paymentProof = await new Promise<{ upiTransactionId: string | null; screenshotFile: File | null }>((resolve, reject) => {
-        openUPICheckout({
-          amount: totalAmount,
-          description,
-          onConfirm: (upiTransactionId, screenshotFile) => resolve({ upiTransactionId, screenshotFile }),
-          onCancel: () => reject(new Error("Payment cancelled.")),
+      let paymentProof;
+      try {
+        paymentProof = await new Promise<{ upiTransactionId: string | null; screenshotFile: File | null }>((resolve, reject) => {
+          openUPICheckout({
+            amount: totalAmount,
+            description,
+            onConfirm: (upiTransactionId, screenshotFile) => resolve({ upiTransactionId, screenshotFile }),
+            onCancel: () => reject(new Error("Payment cancelled.")),
+          });
         });
-      });
+      } catch (cancelErr) {
+        // Explicitly cancel the pending booking so the slot is freed immediately!
+        await cancelBooking(booking.id);
+        throw cancelErr;
+      }
 
       // User confirmed payment — update booking status
       await confirmUpiPayment({

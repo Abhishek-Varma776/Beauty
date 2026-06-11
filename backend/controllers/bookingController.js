@@ -26,10 +26,14 @@ exports.availableSlots = asyncHandler(async (req, res) => {
   const dayStart = new Date(`${targetDate}T00:00:00.000Z`);
   const dayEnd   = new Date(`${targetDate}T23:59:59.999Z`);
 
-  // Fetch all non-cancelled bookings on that day
+  // Fetch all bookings that are confirmed/completed OR pending and created within the last 10 mins
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
   const existingBookings = await Booking.find({
     starts_at: { $gte: dayStart, $lte: dayEnd },
-    status: { $nin: ["cancelled"] },
+    $or: [
+      { status: { $in: ["confirmed", "completed"] } },
+      { status: "pending", createdAt: { $gt: tenMinutesAgo } }
+    ]
   }).select("starts_at ends_at");
 
   const hours = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
@@ -60,10 +64,14 @@ exports.createBooking = asyncHandler(async (req, res) => {
   const { service_id, starts_at, ends_at, payment_type, service_type, notes, customer_name, address, address_lat, address_lng } = req.body;
 
   // ─── Double-check slot is still free (race condition guard) ───────────────
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
   const overlap = await Booking.findOne({
     starts_at: { $lt: new Date(ends_at) },
     ends_at:   { $gt: new Date(starts_at) },
-    status:    { $nin: ["cancelled"] },
+    $or: [
+      { status: { $in: ["confirmed", "completed"] } },
+      { status: "pending", createdAt: { $gt: tenMinutesAgo } }
+    ]
   });
   if (overlap) {
     res.status(409);
