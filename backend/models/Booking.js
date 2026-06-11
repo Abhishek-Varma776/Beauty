@@ -17,6 +17,11 @@ const bookingSchema = new mongoose.Schema(
     notes: { type: String, trim: true, default: "" },
     razorpay_order_id: { type: String, default: null },
     razorpay_payment_id: { type: String, default: null },
+    // Home visit address fields
+    customer_name: { type: String, trim: true, default: "" },
+    address: { type: String, trim: true, default: "" },
+    address_lat: { type: Number, default: null },
+    address_lng: { type: Number, default: null },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );

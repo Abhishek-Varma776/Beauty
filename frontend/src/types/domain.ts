@@ -39,6 +39,10 @@ export interface Booking {
   service_type?: "home" | "salon";
   created_at: string;
   service?: Service;
+  customer_name?: string;
+  address?: string;
+  address_lat?: number | null;
+  address_lng?: number | null;
 }
 
 export interface GalleryItem {
@@ -61,4 +65,5 @@ export interface SlotOption {
   startsAtIso: string;
   endsAtIso: string;
   label: string;
+  isBooked?: boolean;
 }

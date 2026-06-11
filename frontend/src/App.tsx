@@ -11,6 +11,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { BookingPage } from "./pages/BookingPage";
 import { BookingSuccessPage } from "./pages/BookingSuccessPage";
 import { CustomerDashboardPage } from "./pages/CustomerDashboardPage";
+import { HomeAddressPage } from "./pages/HomeAddressPage";
 import { LandingPage } from "./pages/LandingPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
@@ -31,6 +32,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <CustomerDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/book/:serviceId/address"
+                element={
+                  <ProtectedRoute>
+                    <HomeAddressPage />
                   </ProtectedRoute>
                 }
               />

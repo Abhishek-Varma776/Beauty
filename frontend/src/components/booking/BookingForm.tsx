@@ -171,45 +171,81 @@ export const BookingForm = ({
               ⚠️ No slots available on this date. Please choose another date.
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.625rem" }}>
-              {slots.map((slot) => (
-                <button
-                  key={slot.startsAtIso}
-                  type="button"
-                  onClick={() => onSelectSlot(slot.startsAtIso)}
-                  style={{
-                    padding: "0.625rem 0.5rem",
-                    borderRadius: "0.875rem",
-                    border: selectedSlotIso === slot.startsAtIso
-                      ? "2px solid #c9a227"
-                      : "1px solid #2a2a2a",
-                    background: selectedSlotIso === slot.startsAtIso
-                      ? "rgba(201,162,39,0.12)"
-                      : "#111",
-                    color: selectedSlotIso === slot.startsAtIso ? "#c9a227" : "#666",
-                    fontSize: "0.825rem",
-                    fontWeight: selectedSlotIso === slot.startsAtIso ? 700 : 400,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                    textAlign: "center",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedSlotIso !== slot.startsAtIso) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(201,162,39,0.4)";
-                      (e.currentTarget as HTMLButtonElement).style.color = "#a88a3a";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedSlotIso !== slot.startsAtIso) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#2a2a2a";
-                      (e.currentTarget as HTMLButtonElement).style.color = "#666";
-                    }
-                  }}
-                >
-                  {slot.label}
-                </button>
-              ))}
-            </div>
+            <>
+              {/* Slot legend */}
+              <div style={{ display: "flex", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "#555" }}>
+                  <span style={{ width: "10px", height: "10px", borderRadius: "3px", background: "rgba(201,162,39,0.2)", border: "1px solid rgba(201,162,39,0.5)", display: "inline-block" }} />
+                  Available
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "#555" }}>
+                  <span style={{ width: "10px", height: "10px", borderRadius: "3px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", display: "inline-block" }} />
+                  Already Booked
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.625rem" }}>
+                {slots.map((slot) => {
+                  const isSelected = selectedSlotIso === slot.startsAtIso;
+                  const isUnavailable = slot.isBooked === true;
+                  return (
+                    <button
+                      key={slot.startsAtIso}
+                      type="button"
+                      disabled={isUnavailable}
+                      onClick={() => !isUnavailable && onSelectSlot(slot.startsAtIso)}
+                      style={{
+                        padding: "0.625rem 0.5rem",
+                        borderRadius: "0.875rem",
+                        border: isUnavailable
+                          ? "1px solid rgba(239,68,68,0.25)"
+                          : isSelected
+                          ? "2px solid #c9a227"
+                          : "1px solid #2a2a2a",
+                        background: isUnavailable
+                          ? "rgba(239,68,68,0.05)"
+                          : isSelected
+                          ? "rgba(201,162,39,0.12)"
+                          : "#111",
+                        color: isUnavailable
+                          ? "rgba(239,68,68,0.4)"
+                          : isSelected
+                          ? "#c9a227"
+                          : "#666",
+                        fontSize: "0.78rem",
+                        fontWeight: isSelected ? 700 : 400,
+                        cursor: isUnavailable ? "not-allowed" : "pointer",
+                        transition: "all 0.15s ease",
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "0.2rem",
+                        opacity: isUnavailable ? 0.7 : 1,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isUnavailable && !isSelected) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(201,162,39,0.4)";
+                          (e.currentTarget as HTMLButtonElement).style.color = "#a88a3a";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isUnavailable && !isSelected) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#2a2a2a";
+                          (e.currentTarget as HTMLButtonElement).style.color = "#666";
+                        }
+                      }}
+                    >
+                      <span>{slot.label}</span>
+                      {isUnavailable && (
+                        <span style={{ fontSize: "0.6rem", color: "rgba(239,68,68,0.5)", fontWeight: 600, letterSpacing: "0.04em" }}>
+                          BOOKED
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 

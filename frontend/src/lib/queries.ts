@@ -96,12 +96,20 @@ export const createBooking = async ({
   slot,
   paymentType,
   serviceType = "home",
+  customerName,
+  address,
+  addressLat,
+  addressLng,
 }: {
   userId: string;
   service: Service;
   slot: SlotOption;
   paymentType: PaymentType;
   serviceType?: "home" | "salon";
+  customerName?: string;
+  address?: string;
+  addressLat?: number;
+  addressLng?: number;
 }) => {
   const response = await API.post("/bookings", {
     service_id: service.id,
@@ -109,6 +117,10 @@ export const createBooking = async ({
     ends_at: slot.endsAtIso,
     payment_type: paymentType,
     service_type: serviceType,
+    customer_name: customerName || "",
+    address: address || "",
+    address_lat: addressLat || null,
+    address_lng: addressLng || null,
   });
   return normalizeBooking(response.data.booking as Booking & MongoEntity);
 };

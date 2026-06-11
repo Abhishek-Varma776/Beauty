@@ -22,14 +22,34 @@ exports.availableSlots = asyncHandler(async (req, res) => {
     throw new Error("targetDate and serviceId are required");
   }
 
-  const hours = [10, 12, 14, 16, 18];
+  // Build start/end of the target day
+  const dayStart = new Date(`${targetDate}T00:00:00.000Z`);
+  const dayEnd   = new Date(`${targetDate}T23:59:59.999Z`);
+
+  // Fetch all non-cancelled bookings on that day
+  const existingBookings = await Booking.find({
+    starts_at: { $gte: dayStart, $lte: dayEnd },
+    status: { $nin: ["cancelled"] },
+  }).select("starts_at ends_at");
+
+  const hours = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
   const slots = hours.map((hour) => {
     const start = new Date(`${targetDate}T${String(hour).padStart(2, "0")}:00:00`);
-    const end = new Date(start.getTime() + service.duration_min * 60 * 1000);
+    const end   = new Date(start.getTime() + service.duration_min * 60 * 1000);
+
+    // Check if any existing booking overlaps this slot window
+    const isBooked = existingBookings.some((b) => {
+      const bStart = new Date(b.starts_at);
+      const bEnd   = new Date(b.ends_at);
+      // Overlap: slot starts before booking ends AND slot ends after booking starts
+      return start < bEnd && end > bStart;
+    });
+
     return {
       startsAtIso: start.toISOString(),
-      endsAtIso: end.toISOString(),
-      label: start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      endsAtIso:   end.toISOString(),
+      label:       start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+      isBooked,
     };
   });
 
@@ -37,7 +57,19 @@ exports.availableSlots = asyncHandler(async (req, res) => {
 });
 
 exports.createBooking = asyncHandler(async (req, res) => {
-  const { service_id, starts_at, ends_at, payment_type, service_type, notes } = req.body;
+  const { service_id, starts_at, ends_at, payment_type, service_type, notes, customer_name, address, address_lat, address_lng } = req.body;
+
+  // ─── Double-check slot is still free (race condition guard) ───────────────
+  const overlap = await Booking.findOne({
+    starts_at: { $lt: new Date(ends_at) },
+    ends_at:   { $gt: new Date(starts_at) },
+    status:    { $nin: ["cancelled"] },
+  });
+  if (overlap) {
+    res.status(409);
+    throw new Error("This time slot was just booked by someone else. Please choose another slot.");
+  }
+
   const booking = await Booking.create({
     user_id: req.user.id,
     service_id,
@@ -48,6 +80,11 @@ exports.createBooking = asyncHandler(async (req, res) => {
     notes: notes || "",
     payment_status: payment_type === "cash" ? "not_required" : "created",
     status: payment_type === "cash" ? "confirmed" : "pending",
+    // Home visit address
+    customer_name: customer_name || "",
+    address: address || "",
+    address_lat: address_lat || null,
+    address_lng: address_lng || null,
   });
 
   const populated = await populateBooking(Booking.findById(booking.id));

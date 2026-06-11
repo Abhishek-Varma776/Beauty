@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Home, Store } from "lucide-react";
 
 import { BookingForm } from "../components/booking/BookingForm";
@@ -18,7 +18,16 @@ import type { PaymentType, Service, SlotOption } from "../types/domain";
 export const BookingPage = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, session } = useAuth();
+
+  // Address passed from HomeAddressPage via router state
+  const addressState = location.state as {
+    customerName?: string;
+    address?: string;
+    addressLat?: number;
+    addressLng?: number;
+  } | null;
 
   const [service, setService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -97,7 +106,8 @@ export const BookingPage = () => {
           service,
         });
         setSlots(available);
-        setSelectedSlotIso(available[0]?.startsAtIso ?? "");
+        // Don't auto-select — user must consciously pick an available slot
+        setSelectedSlotIso("");
       } catch (err) {
         setErrorMessage(err instanceof Error ? err.message : "Unable to load slots");
       } finally {
@@ -125,6 +135,10 @@ export const BookingPage = () => {
         slot: selectedSlot,
         paymentType,
         serviceType,
+        customerName: addressState?.customerName,
+        address: addressState?.address,
+        addressLat: addressState?.addressLat,
+        addressLng: addressState?.addressLng,
       });
 
       if (paymentType === "cash") {
@@ -185,12 +199,90 @@ export const BookingPage = () => {
 
   if (!service) {
     return <section className="section-shell py-10" style={{ color: "#ef4444" }}>Service not found.</section>;
-  }
-
-  return (
+  }  return (
     <div style={{ background: "#0a0a0a", minHeight: "calc(100vh - 120px)", padding: "2rem 0" }}>
       <div className="section-shell">
         <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+
+          {/* Address Banner for Home Visit */}
+          {serviceType === "home" && addressState?.address && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.75rem",
+                padding: "0.875rem 1rem",
+                marginBottom: "1.25rem",
+                borderRadius: "0.875rem",
+                background: "rgba(201,162,39,0.06)",
+                border: "1px solid rgba(201,162,39,0.2)",
+              }}
+            >
+              <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>📍</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ color: "#c9a227", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", margin: "0 0 0.2rem", textTransform: "uppercase" }}>
+                  Home Visit Address
+                </p>
+                <p style={{ color: "#e8d5a3", fontSize: "0.85rem", margin: "0 0 0.15rem", fontWeight: 600 }}>
+                  {addressState.customerName}
+                </p>
+                <p style={{ color: "#888", fontSize: "0.82rem", margin: 0, lineHeight: 1.5 }}>
+                  {addressState.address}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/book/${serviceId}/address`)}
+                style={{ background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, flexShrink: 0, padding: "0.25rem 0.5rem" }}
+              >
+                Change
+              </button>
+            </div>
+          )}
+
+          {/* Prompt to collect address for Home Visit */}
+          {serviceType === "home" && !addressState?.address && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+                padding: "1rem 1.25rem",
+                marginBottom: "1.25rem",
+                borderRadius: "0.875rem",
+                background: "rgba(201,162,39,0.06)",
+                border: "1px solid rgba(201,162,39,0.25)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ fontSize: "1.3rem" }}>🏠</span>
+                <div>
+                  <p style={{ color: "#e8d5a3", fontSize: "0.85rem", fontWeight: 600, margin: "0 0 0.15rem" }}>Add Your Home Address</p>
+                  <p style={{ color: "#666", fontSize: "0.78rem", margin: 0 }}>Required for home visit — tell us where to come</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/book/${serviceId}/address`)}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "0.625rem",
+                  border: "1px solid rgba(201,162,39,0.4)",
+                  background: "rgba(201,162,39,0.1)",
+                  color: "#c9a227",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Add Address →
+              </button>
+            </div>
+          )}
+
           {/* Service Type Selector */}
           <div style={{ marginBottom: "1.5rem" }}>
             <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "0.75rem", letterSpacing: "0.05em" }}>
@@ -246,4 +338,3 @@ export const BookingPage = () => {
     </div>
   );
 };
-
