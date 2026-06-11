@@ -36,18 +36,38 @@ interface UPIParams {
 }
 
 export const buildUPILink = (app: "gpay" | "phonepe" | "paytm" | "generic", params: UPIParams): string => {
-  const base = encodeURIComponent(SALON_UPI_ID);
+  const base = SALON_UPI_ID; // Do NOT encode the UPI ID! Keeps the raw '@' sign for proper app parsing.
   const name = encodeURIComponent(SALON_NAME);
   const amt = params.amount.toFixed(2);
-  const note = encodeURIComponent(params.description);
 
-  const query = `pa=${base}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
+  const query = `pa=${base}&pn=${name}&am=${amt}&cu=INR`;
 
-  switch (app) {
-    case "gpay":    return `tez://upi/pay?${query}`;
-    case "phonepe": return `phonepe://pay?${query}`;
-    case "paytm":   return `paytmmp://pay?${query}`;
-    default:        return `upi://pay?${query}`;
+  const ua = navigator.userAgent.toLowerCase();
+  const isIos = ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod");
+  const isAndroid = ua.includes("android");
+
+  if (isIos) {
+    switch (app) {
+      case "gpay":    return `gpay://upi/pay?${query}`;
+      case "phonepe": return `phonepe://upi/pay?${query}`;
+      case "paytm":   return `paytmmp://pay?${query}`;
+      default:        return `upi://pay?${query}`;
+    }
+  } else if (isAndroid) {
+    switch (app) {
+      case "gpay":    return `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`;
+      case "phonepe": return `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;end`;
+      case "paytm":   return `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;end`;
+      default:        return `upi://pay?${query}`;
+    }
+  } else {
+    // Desktop / Fallback
+    switch (app) {
+      case "gpay":    return `upi://pay?${query}`;
+      case "phonepe": return `upi://pay?${query}`;
+      case "paytm":   return `upi://pay?${query}`;
+      default:        return `upi://pay?${query}`;
+    }
   }
 };
 
@@ -128,11 +148,14 @@ export const openUPICheckout = ({
           id: "gpay",
           label: "Google Pay",
           iconHtml: `
-            <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:0.4rem">
-              <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 1.56-1.56 2.95-3.18 3.5v2.88h5.13c3-2.77 4.73-6.85 4.73-11.69 0-.47-.04-.92-.1-1.37z" fill="#4285F4"/>
-              <path d="M12.18 20.43c2.7 0 4.96-.89 6.62-2.42l-5.13-2.88c-.73.49-1.66.78-2.62.78-2.6 0-4.81-1.76-5.59-4.12H.2v2.98c1.65 3.28 5.07 5.54 9.05 5.54z" fill="#34A853"/>
-              <path d="M6.59 11.79c-.2-.59-.31-1.22-.31-1.87s.11-1.28.31-1.87V5.07H.2A11.89 11.89 0 000 9.92c0 1.74.38 3.4 1.06 4.9l5.53-3.03z" fill="#FBBC05"/>
-              <path d="M12.18 5.4c1.47 0 2.79.5 3.82 1.49l2.87-2.87C17.13 2.5 14.88 1.5 12.18 1.5c-3.98 0-7.4 2.26-9.05 5.54l5.53 3.03c.78-2.36 2.99-4.12 5.59-4.12z" fill="#EA4335"/>
+            <svg width="55" height="22" viewBox="0 0 41 17" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:0.8rem;margin-top:0.4rem">
+              <g fill="none" fill-rule="evenodd">
+                <path d="M19.526 2.635v4.083h2.518c.6 0 1.096-.202 1.488-.605.403-.402.605-.882.605-1.437 0-.544-.202-1.018-.605-1.422-.392-.413-.888-.62-1.488-.62h-2.518zm0 5.52v4.736h-1.504V1.198h3.99c1.013 0 1.873.337 2.582 1.012.72.675 1.08 1.497 1.08 2.466 0 .991-.36 1.819-1.08 2.482-.697.665-1.559.996-2.583.996h-2.485v.001zm7.668 2.287c0 .392.166.718.499.98.332.26.722.391 1.168.391.633 0 1.962-.234 1.692-.701.497-.469.744-1.019.744-1.65-.469-.37-1.123-.555-1.962-.555-.61 0-1.12.148-1.528.442-.409.294-.613.657-.613 1.093m1.946-5.815c1.112 0 1.989.297 2.633.89.642.594.964 1.408.964 2.442v4.932h-1.439v-1.11h-.065c-.622.914-1.45 1.372-2.486 1.372-.882 0-1.621-.262-2.215-.784-.594-.523-.891-1.176-.891-1.96 0-.828.313-1.486.94-1.976s1.463-.735 2.51-.735c.892 0 1.629.163 2.206.49v-.344c0-.522-.207-.966-.621-1.33a2.132 2.132 0 0 0-1.455-.547c-.84 0-1.504.353-1.995 1.062l-1.324-.834c.73-1.045 1.81-1.568 3.238-1.568m11.853.262l-5.02 11.53H34.42l1.864-4.034-3.302-7.496h1.635l2.387 5.749h.032l2.322-5.75z" fill="#FFF"/>
+                <path d="M13.448 7.134c0-.473-.04-.93-.116-1.366H6.988v2.588h3.634a3.11 3.11 0 0 1-1.344 2.042v1.68h2.169c1.27-1.17 2.001-2.9 2.001-4.944" fill="#4285F4"/>
+                <path d="M6.988 13.7c1.816 0 3.344-.595 4.459-1.621l-2.169-1.681c-.603.406-1.38.643-2.29.643-1.754 0-3.244-1.182-3.776-2.774H.978v1.731a6.728 6.728 0 0 0 6.01 3.703" fill="#34A853"/>
+                <path d="M3.212 8.267a4.034 4.034 0 0 1 0-2.572V3.964H.978A6.678 6.678 0 0 0 .261 6.98c0 1.085.26 2.11.717 3.017l2.234-1.731z" fill="#FABB05"/>
+                <path d="M6.988 2.921c.992 0 1.88.34 2.58 1.008v.001l1.92-1.918C10.324.928 8.804.262 6.989.262a6.728 6.728 0 0 0-6.01 3.702l2.234 1.731c.532-1.592 2.022-2.774 3.776-2.774" fill="#E94235"/>
+              </g>
             </svg>
           `,
           color: "#4285F4"
@@ -141,9 +164,9 @@ export const openUPICheckout = ({
           id: "phonepe",
           label: "PhonePe",
           iconHtml: `
-            <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:0.4rem">
-              <rect width="24" height="24" rx="6" fill="#5F259F"/>
-              <path d="M10.206 9.941h2.949v4.692c-.402.201-.938.268-1.34.268-1.072 0-1.609-.536-1.609-1.743V9.941zm13.47 4.816c-1.523 6.449-7.985 10.442-14.433 8.919C2.794 22.154-1.199 15.691.324 9.243 1.847 2.794 8.309-1.199 14.757.324c6.449 1.523 10.442 7.985 8.919 14.433zm-6.231-5.888a.887.887 0 0 0-.871-.871h-1.609l-3.686-4.222c-.335-.402-.871-.536-1.407-.402l-1.274.401c-.201.067-.268.335-.134.469l4.021 3.82H6.386c-.201 0-.335.134-.335.335v.67c0 .469.402.871.871.871h.938v3.217c0 2.413 1.273 3.82 3.418 3.82.67 0 1.206-.067 1.877-.335v2.145c0 .603.469 1.072 1.072 1.072h.938a.432.432 0 0 0 .402-.402V9.874h1.542c.201 0 .335-.134.335-.335v-.67z" fill="#fff"/>
+            <svg viewBox="0 0 24 24" width="30" height="30" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:0.4rem">
+              <circle cx="12" cy="12" r="11" fill="#ffffff"/>
+              <path d="M10.206 9.941h2.949v4.692c-.402.201-.938.268-1.34.268-1.072 0-1.609-.536-1.609-1.743V9.941zm13.47 4.816c-1.523 6.449-7.985 10.442-14.433 8.919C2.794 22.154-1.199 15.691.324 9.243 1.847 2.794 8.309-1.199 14.757.324c6.449 1.523 10.442 7.985 8.919 14.433zm-6.231-5.888a.887.887 0 0 0-.871-.871h-1.609l-3.686-4.222c-.335-.402-.871-.536-1.407-.402l-1.274.401c-.201.067-.268.335-.134.469l4.021 3.82H6.386c-.201 0-.335.134-.335.335v.67c0 .469.402.871.871.871h.938v3.217c0 2.413 1.273 3.82 3.418 3.82.67 0 1.206-.067 1.877-.335v2.145c0 .603.469 1.072 1.072 1.072h.938a.432.432 0 0 0 .402-.402V9.874h1.542c.201 0 .335-.134.335-.335v-.67z" fill="#5F259F" fill-rule="evenodd" clip-rule="evenodd"/>
             </svg>
           `,
           color: "#5F259F"
@@ -152,9 +175,11 @@ export const openUPICheckout = ({
           id: "paytm",
           label: "Paytm",
           iconHtml: `
-            <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:0.4rem">
-              <rect width="24" height="24" rx="6" fill="#00baf2"/>
-              <text x="50%" y="65%" font-size="7.5" font-weight="900" fill="#fff" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">Paytm</text>
+            <svg viewBox="0 0 100 100" width="30" height="30" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:0.4rem">
+              <path d="M 50 0 A 50 50 0 0 1 100 50 L 0 50 A 50 50 0 0 1 50 0" fill="#00baf2"/>
+              <path d="M 100 50 A 50 50 0 0 1 50 100 A 50 50 0 0 1 0 50 L 100 50" fill="#0f265c"/>
+              <circle cx="50" cy="50" r="34" fill="#fff"/>
+              <text x="50" y="57" font-size="16" font-weight="900" fill="#00baf2" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">pay<tspan fill="#0f265c">tm</tspan></text>
             </svg>
           `,
           color: "#00baf2"
