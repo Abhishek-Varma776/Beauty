@@ -351,3 +351,32 @@ exports.verifyPayment = asyncHandler(async (req, res) => {
     throw new Error(`PhonePe status check error: ${err.message}`);
   }
 });
+
+// ─── UPI Self-Confirm: user taps "I've Paid" after UPI deep link ──────────────
+exports.confirmUpiPayment = asyncHandler(async (req, res) => {
+  const { bookingId } = req.body;
+
+  if (!bookingId) {
+    res.status(400);
+    throw new Error("bookingId is required");
+  }
+
+  const booking = await Booking.findById(bookingId);
+  if (!booking) {
+    res.status(404);
+    throw new Error("Booking not found");
+  }
+
+  if (req.user.role !== "admin" && String(booking.user_id) !== req.user.id) {
+    res.status(403);
+    throw new Error("Access denied");
+  }
+
+  booking.status = "confirmed";
+  booking.payment_status = "paid";
+  booking.razorpay_payment_id = `upi_${Date.now()}`;
+  await booking.save();
+
+  const populated = await populateBooking(Booking.findById(booking.id));
+  res.json({ booking: populated });
+});

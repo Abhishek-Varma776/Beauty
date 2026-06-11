@@ -165,3 +165,8 @@ export const verifyPaymentAndConfirm = async (payload: {
   const response = await API.post("/bookings/payments/verify", payload);
   return normalizeBooking(response.data.booking as Booking & MongoEntity);
 };
+
+export const confirmUpiPayment = async (bookingId: string) => {
+  const response = await API.post("/bookings/payments/confirm-upi", { bookingId });
+  return normalizeBooking(response.data.booking as Booking & MongoEntity);
+};

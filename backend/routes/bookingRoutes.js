@@ -3,6 +3,7 @@ const {
   adminBookings,
   availableSlots,
   cancelBooking,
+  confirmUpiPayment,
   createBooking,
   createOnlineOrder,
   getBooking,
@@ -25,5 +26,6 @@ router.patch("/:id/status", protect, adminOnly, updateStatus);
 router.patch("/:id/cancel", protect, cancelBooking);
 router.post("/payments/order", protect, createOnlineOrder);
 router.post("/payments/verify", protect, verifyPayment);
+router.post("/payments/confirm-upi", protect, confirmUpiPayment);
 
 module.exports = router;

@@ -16,6 +16,8 @@ interface BookingFormProps {
   loadingSlots: boolean;
   errorMessage: string | null;
   serviceType: "home" | "salon";
+  deliveryCharge?: number;
+  totalAmount?: number;
 }
 
 export const BookingForm = ({
@@ -32,8 +34,11 @@ export const BookingForm = ({
   loadingSlots,
   errorMessage,
   serviceType,
+  deliveryCharge = 0,
+  totalAmount,
 }: BookingFormProps) => {
   const currentPrice = serviceType === "home" ? (service.price_home || service.price) : service.price;
+  const displayTotal = totalAmount ?? (currentPrice + deliveryCharge);
 
   return (
     <section
@@ -377,9 +382,16 @@ export const BookingForm = ({
             justifyContent: "space-between",
             alignItems: "center",
           }}>
-            <span style={{ color: "#888", fontSize: "0.875rem" }}>Total Amount</span>
+            <div>
+              <span style={{ color: "#888", fontSize: "0.875rem" }}>Total Amount</span>
+              {deliveryCharge > 0 && (
+                <div style={{ color: "#555", fontSize: "0.72rem", marginTop: "0.15rem" }}>
+                  ₹{currentPrice} service + ₹{deliveryCharge} home visit
+                </div>
+              )}
+            </div>
             <span style={{ color: "#c9a227", fontSize: "1.25rem", fontWeight: 700, fontFamily: "'Cinzel', serif" }}>
-              ₹{currentPrice}
+              ₹{displayTotal}
             </span>
           </div>
         )}
@@ -400,14 +412,14 @@ export const BookingForm = ({
           {submitting
             ? "Processing…"
             : paymentType === "online"
-            ? "🔒 Proceed to Payment"
+            ? `💳 Pay ₹${selectedSlotIso ? displayTotal : "—"} via UPI`
             : "✓ Confirm Cash Booking"}
         </button>
 
         {/* Security note */}
         {paymentType === "online" && (
           <p style={{ color: "#444", fontSize: "0.72rem", textAlign: "center", margin: 0 }}>
-            🔐 Secured by PhonePe — 256-bit SSL encryption
+            📱 Pay via Google Pay, PhonePe, Paytm or any UPI app
           </p>
         )}
       </div>
