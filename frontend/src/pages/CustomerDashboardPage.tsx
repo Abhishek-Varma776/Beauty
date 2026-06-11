@@ -375,7 +375,17 @@ export const CustomerDashboardPage = () => {
                           📅 {formatBookingDateTime(booking.starts_at, booking.ends_at)}
                         </p>
                         <p style={{ color: "#555", fontSize: "0.8rem", margin: 0 }}>
-                          💳 Payment: {booking.payment_type} ({booking.payment_status})
+                          💳 Payment: {booking.payment_type.toUpperCase()} ({booking.payment_status.toUpperCase()})
+                          {booking.upi_transaction_id && (
+                            <span style={{ color: "#888", display: "block", fontSize: "0.75rem", marginTop: "4px" }}>
+                              Transaction ID: <strong style={{ color: "#e8d5a3", fontFamily: "monospace" }}>{booking.upi_transaction_id}</strong>
+                            </span>
+                          )}
+                          {booking.payment_screenshot && !booking.upi_transaction_id && (
+                            <span style={{ color: "#888", display: "block", fontSize: "0.75rem", marginTop: "4px" }}>
+                              ✓ Payment screenshot uploaded
+                            </span>
+                          )}
                         </p>
                         {booking.status !== "cancelled" && canCancelBooking(booking.starts_at) && (
                           <button

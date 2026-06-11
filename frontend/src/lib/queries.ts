@@ -166,7 +166,28 @@ export const verifyPaymentAndConfirm = async (payload: {
   return normalizeBooking(response.data.booking as Booking & MongoEntity);
 };
 
-export const confirmUpiPayment = async (bookingId: string) => {
-  const response = await API.post("/bookings/payments/confirm-upi", { bookingId });
+export const confirmUpiPayment = async ({
+  bookingId,
+  upiTransactionId,
+  screenshotFile,
+}: {
+  bookingId: string;
+  upiTransactionId?: string | null;
+  screenshotFile?: File | null;
+}) => {
+  const formData = new FormData();
+  formData.append("bookingId", bookingId);
+  if (upiTransactionId) {
+    formData.append("upiTransactionId", upiTransactionId);
+  }
+  if (screenshotFile) {
+    formData.append("screenshot", screenshotFile);
+  }
+
+  const response = await API.post("/bookings/payments/confirm-upi", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return normalizeBooking(response.data.booking as Booking & MongoEntity);
 };

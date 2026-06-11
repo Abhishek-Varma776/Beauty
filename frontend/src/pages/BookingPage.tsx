@@ -148,17 +148,21 @@ export const BookingPage = () => {
       const totalAmount = basePrice + deliveryCharge;
       const description = `${service.name} booking${deliveryCharge > 0 ? ` + ₹${deliveryCharge} home visit` : ""}`;
 
-      await new Promise<void>((resolve, reject) => {
+      const paymentProof = await new Promise<{ upiTransactionId: string | null; screenshotFile: File | null }>((resolve, reject) => {
         openUPICheckout({
           amount: totalAmount,
           description,
-          onConfirm: () => resolve(),
+          onConfirm: (upiTransactionId, screenshotFile) => resolve({ upiTransactionId, screenshotFile }),
           onCancel: () => reject(new Error("Payment cancelled.")),
         });
       });
 
       // User confirmed payment — update booking status
-      await confirmUpiPayment(booking.id);
+      await confirmUpiPayment({
+        bookingId: booking.id,
+        upiTransactionId: paymentProof.upiTransactionId,
+        screenshotFile: paymentProof.screenshotFile,
+      });
       navigate(`/booking/success/${booking.id}`, { replace: true });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Unable to complete booking");

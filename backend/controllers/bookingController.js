@@ -354,7 +354,7 @@ exports.verifyPayment = asyncHandler(async (req, res) => {
 
 // ─── UPI Self-Confirm: user taps "I've Paid" after UPI deep link ──────────────
 exports.confirmUpiPayment = asyncHandler(async (req, res) => {
-  const { bookingId } = req.body;
+  const { bookingId, upiTransactionId } = req.body;
 
   if (!bookingId) {
     res.status(400);
@@ -374,7 +374,15 @@ exports.confirmUpiPayment = asyncHandler(async (req, res) => {
 
   booking.status = "confirmed";
   booking.payment_status = "paid";
-  booking.razorpay_payment_id = `upi_${Date.now()}`;
+  
+  if (upiTransactionId) {
+    booking.upi_transaction_id = upiTransactionId;
+  }
+  if (req.file) {
+    booking.payment_screenshot = `/uploads/${req.file.filename}`;
+  }
+  
+  booking.razorpay_payment_id = upiTransactionId || `upi_${Date.now()}`;
   await booking.save();
 
   const populated = await populateBooking(Booking.findById(booking.id));

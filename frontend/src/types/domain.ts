@@ -43,6 +43,8 @@ export interface Booking {
   address?: string;
   address_lat?: number | null;
   address_lng?: number | null;
+  upi_transaction_id?: string;
+  payment_screenshot?: string;
 }
 
 export interface GalleryItem {

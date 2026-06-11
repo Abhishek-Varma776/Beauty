@@ -22,6 +22,8 @@ const bookingSchema = new mongoose.Schema(
     address: { type: String, trim: true, default: "" },
     address_lat: { type: Number, default: null },
     address_lng: { type: Number, default: null },
+    upi_transaction_id: { type: String, default: null },
+    payment_screenshot: { type: String, default: null },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );

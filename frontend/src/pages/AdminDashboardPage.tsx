@@ -6,7 +6,7 @@ import { BookingManager } from "../components/admin/BookingManager";
 import { ServiceManager } from "../components/admin/ServiceManager";
 import { SlotManager } from "../components/admin/SlotManager";
 import { useAuth } from "../context/AuthContext";
-import API from "../api/axios";
+import API, { BACKEND_URL } from "../api/axios";
 
 type AdminTab = "today" | "services" | "bookings" | "slots";
 
@@ -17,6 +17,9 @@ interface TodayBooking {
   status: string;
   service_type?: string;
   payment_type?: string;
+  payment_status?: string;
+  upi_transaction_id?: string;
+  payment_screenshot?: string;
   service?: { name: string; price: number };
   customer?: { name: string; phone: string };
 }
@@ -210,6 +213,29 @@ export const AdminDashboardPage = () => {
                           {booking.service_type === "salon" ? "Salon Visit" : "Home Visit"}
                         </span>
                       </div>
+                      {booking.payment_type === "online" && (
+                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap", marginTop: "0.35rem", fontSize: "0.75rem" }}>
+                          <span style={{ color: "#888" }}>Payment:</span>
+                          <span style={{ color: booking.payment_status === "paid" ? "#22c55e" : "#e2a829", fontWeight: 600 }}>
+                            {booking.payment_status ? booking.payment_status.toUpperCase() : "PENDING"}
+                          </span>
+                          {booking.upi_transaction_id && (
+                            <span style={{ color: "#c9a227", fontFamily: "monospace" }}>
+                              TXN ID: {booking.upi_transaction_id}
+                            </span>
+                          )}
+                          {booking.payment_screenshot && (
+                            <a
+                              href={`${BACKEND_URL}${booking.payment_screenshot}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: "#c9a227", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "2px", fontWeight: 500 }}
+                            >
+                              🖼️ View Proof
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Status */}

@@ -13,6 +13,7 @@ const {
   verifyPayment,
 } = require("../controllers/bookingController");
 const { adminOnly, protect } = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
@@ -26,6 +27,6 @@ router.patch("/:id/status", protect, adminOnly, updateStatus);
 router.patch("/:id/cancel", protect, cancelBooking);
 router.post("/payments/order", protect, createOnlineOrder);
 router.post("/payments/verify", protect, verifyPayment);
-router.post("/payments/confirm-upi", protect, confirmUpiPayment);
+router.post("/payments/confirm-upi", protect, upload.single("screenshot"), confirmUpiPayment);
 
 module.exports = router;
