@@ -5,6 +5,7 @@ import { Home, Store, MapPin } from "lucide-react";
 
 import { BookingForm } from "../components/booking/BookingForm";
 import { useAuth } from "../context/AuthContext";
+import {
   createBooking,
   fetchAvailableSlots,
   fetchServiceById,
