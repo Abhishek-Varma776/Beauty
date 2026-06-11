@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { MapPin, Phone, Mail, Clock, Heart, Code2, X, Shield, FileText, RefreshCcw, ChevronRight } from "lucide-react";
 
-type PolicyType = "privacy" | "terms" | "refund" | null;
+export type PolicyType = "privacy" | "terms" | "refund" | null;
 
 // ─── Policy Content ────────────────────────────────────────────────────────────
-const POLICIES: Record<
+export const POLICIES: Record<
   Exclude<PolicyType, null>,
   { icon: React.ReactNode; title: string; subtitle: string; sections: { heading: string; body: React.ReactNode }[] }
 > = {

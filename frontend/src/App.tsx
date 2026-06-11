@@ -14,6 +14,7 @@ import { CustomerDashboardPage } from "./pages/CustomerDashboardPage";
 import { HomeAddressPage } from "./pages/HomeAddressPage";
 import { LandingPage } from "./pages/LandingPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { PolicyPage } from "./pages/PolicyPage";
 
 function App() {
   return (
@@ -25,6 +26,9 @@ function App() {
           <main style={{ flex: 1 }}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/privacy-policy" element={<PolicyPage type="privacy" />} />
+              <Route path="/terms-and-conditions" element={<PolicyPage type="terms" />} />
+              <Route path="/refund-policy" element={<PolicyPage type="refund" />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/:mode" element={<AuthPage />} />
               <Route
