@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { POLICIES, PolicyType } from "../components/layout/Footer";
+import { POLICIES } from "../components/layout/Footer";
+import type { PolicyType } from "../components/layout/Footer";
 import { ArrowLeft } from "lucide-react";
 
 interface PolicyPageProps {
