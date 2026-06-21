@@ -27,15 +27,39 @@ function getDeliveryCharge(distanceKm) {
 }
 
 // ─── WhatsApp Notification Logger ────────────────────────────────────────────
-function sendBookingWhatsAppNotifications(booking) {
-  const ADMIN_WA = process.env.ADMIN_WHATSAPP || "917780294746";
+// ─── CallMeBot: Auto-send WhatsApp to admin ─────────────────────────────────
+async function sendWhatsAppToAdmin(message) {
+  const apiKey = process.env.CALLMEBOT_API_KEY;
+  const phone  = process.env.ADMIN_WHATSAPP || "917780294746";
 
+  if (!apiKey) {
+    // API key not yet configured — log clearly so admin can set it up
+    console.log("\n⚠️  CALLMEBOT_API_KEY not set. To enable auto WhatsApp:\n"
+      + "   1. Send 'I allow callmebot to send me messages' to +34 644 38 53 73 on WhatsApp\n"
+      + "   2. You will receive an API key reply\n"
+      + "   3. Add  CALLMEBOT_API_KEY=<key>  to backend .env and Render env vars\n");
+    console.log("📲 WhatsApp (would-send) to +" + phone + ":\n" + message + "\n");
+    return;
+  }
+
+  try {
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+    const res  = await fetch(url);
+    const body = await res.text();
+    console.log(`📲 CallMeBot WhatsApp → +${phone}: ${body.trim()}`);
+  } catch (err) {
+    console.error("CallMeBot WhatsApp error:", err.message);
+  }
+}
+
+function sendBookingWhatsAppNotifications(booking) {
   let serviceDate = "N/A";
   let serviceTime = "N/A";
   try {
+    // Convert UTC time from DB to IST for display
     const d = new Date(booking.starts_at);
-    serviceDate = d.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
-    serviceTime = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+    serviceDate = d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "long", year: "numeric" });
+    serviceTime = d.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true });
   } catch (_) { /* ignore */ }
 
   const serviceName   = booking.service?.name ?? "Service";
@@ -46,9 +70,8 @@ function sendBookingWhatsAppNotifications(booking) {
   const addressLine   = booking.address ? `\nAddress: ${booking.address}` : "";
 
   const adminMsg = [
-    `🔔 *New Booking Alert — Mani's Elite Makeover Studio*`,
+    `🔔 *New Booking — Mani's Elite Makeover Studio*`,
     ``,
-    `📋 *Booking ID:* ${booking._id || booking.id}`,
     `💅 *Service:* ${serviceName}`,
     `👤 *Customer:* ${customerName}`,
     `📞 *Phone:* ${customerPhone}`,
@@ -57,33 +80,16 @@ function sendBookingWhatsAppNotifications(booking) {
     `🏷️ *Type:* ${serviceType}`,
     `💳 *Payment:* ${paymentType}`,
     addressLine,
-    ``,
-    `✅ *Status:* ${booking.status}`,
-  ].join("\n");
+    `✅ *Status:* Confirmed`,
+  ].filter(Boolean).join("\n");
 
-  const customerMsg = [
-    `✨ *Booking Confirmed — Mani's Elite Makeover Studio*`,
-    ``,
-    `Hi ${customerName}! Your appointment is confirmed.`,
-    ``,
-    `💅 *Service:* ${serviceName}`,
-    `📅 *Date:* ${serviceDate}`,
-    `⏰ *Time:* ${serviceTime}`,
-    `🏷️ *Type:* ${serviceType}`,
-    `💳 *Payment:* ${paymentType}`,
-    ``,
-    `For any queries, call/WhatsApp us: +91 77802 94746`,
-    ``,
-    `Thank you for choosing us! 💄`,
-  ].join("\n");
+  // Auto-send to admin via CallMeBot (non-blocking)
+  sendWhatsAppToAdmin(adminMsg).catch((e) => console.error("WhatsApp admin error:", e.message));
 
   console.log("\n─────────────────────────────────────────────────────");
-  console.log("📲 WhatsApp Notification — ADMIN");
-  console.log(`   To: +${ADMIN_WA}`);
-  console.log("   Message:\n" + adminMsg);
-  console.log("\n📲 WhatsApp Notification — CUSTOMER");
-  console.log(`   To: +91${customerPhone}`);
-  console.log("   Message:\n" + customerMsg);
+  console.log("📲 Admin WhatsApp dispatched for booking:", booking._id || booking.id);
+  console.log("   Customer:", customerName, "|", customerPhone);
+  console.log("   Service: ", serviceName, "@", serviceTime, serviceDate);
   console.log("─────────────────────────────────────────────────────\n");
 }
 
@@ -113,21 +119,29 @@ exports.availableSlots = asyncHandler(async (req, res) => {
   }).select("starts_at ends_at");
 
   const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+  const nowUtc = new Date(); // current moment (UTC on server)
+
   const slots = hours.map((hour) => {
-    const start = new Date(`${targetDate}T${String(hour).padStart(2, "0")}:00:00`);
+    // Create the slot time as IST (UTC+5:30) to match what customers see
+    const start = new Date(`${targetDate}T${String(hour).padStart(2, "0")}:00:00+05:30`);
     const end   = new Date(start.getTime() + service.duration_min * 60 * 1000);
 
-    const isBooked = existingBookings.some((b) => {
+    // Block if already booked by another user
+    const isBookedByOther = existingBookings.some((b) => {
       const bStart = new Date(b.starts_at);
       const bEnd   = new Date(b.ends_at);
       return start < bEnd && end > bStart;
     });
 
+    // Block if the slot time has already passed (can't book in the past)
+    const isPast = start <= nowUtc;
+
     return {
       startsAtIso: start.toISOString(),
       endsAtIso:   end.toISOString(),
-      label:       start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
-      isBooked,
+      // Label shown to user — always in IST regardless of server timezone
+      label:       start.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true }),
+      isBooked:    isBookedByOther || isPast,
     };
   });
 
