@@ -1,5 +1,5 @@
-import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
+import { formatDateISTShort, formatTimeIST } from "../../lib/booking";
 
 import { fetchAdminBookings, updateBookingStatus } from "../../lib/queries";
 import type { Booking, BookingStatus } from "../../types/domain";
@@ -79,7 +79,7 @@ export const BookingManager = ({ canEdit }: { canEdit: boolean }) => {
                       <p className="text-xs text-slate-500">{customer?.phone}</p>
                     </td>
                     <td className="p-2">{service?.name}</td>
-                    <td className="p-2">{format(parseISO(booking.starts_at), "dd MMM yyyy, hh:mm a")}</td>
+                    <td className="p-2">{`${formatDateISTShort(booking.starts_at)}, ${formatTimeIST(booking.starts_at)}`}</td>
                     <td className="p-2">
                       <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                         <span style={{ fontWeight: 600 }}>{booking.payment_type.toUpperCase()}</span>

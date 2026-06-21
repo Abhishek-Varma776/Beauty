@@ -46,9 +46,29 @@ async function sendWhatsAppToAdmin(message) {
     const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
     const res  = await fetch(url);
     const body = await res.text();
-    console.log(`📲 CallMeBot WhatsApp → +${phone}: ${body.trim()}`);
+    console.log(`📲 CallMeBot WhatsApp → Admin +${phone}: ${body.trim()}`);
   } catch (err) {
     console.error("CallMeBot WhatsApp error:", err.message);
+  }
+}
+
+// ─── CallMeBot: Auto-send WhatsApp to customer ───────────────────────────────
+async function sendWhatsAppToCustomer(phone, message) {
+  const apiKey = process.env.CALLMEBOT_API_KEY;
+  if (!apiKey) {
+    console.log("📲 WhatsApp (would-send to customer) to +" + phone + ":\n" + message + "\n");
+    return;
+  }
+
+  // Remove any spaces/plus signs from phone number
+  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  try {
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${cleanPhone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+    const res  = await fetch(url);
+    const body = await res.text();
+    console.log(`📲 CallMeBot WhatsApp → Customer +${cleanPhone}: ${body.trim()}`);
+  } catch (err) {
+    console.error("CallMeBot WhatsApp Customer error:", err.message);
   }
 }
 
@@ -86,8 +106,28 @@ function sendBookingWhatsAppNotifications(booking) {
   // Auto-send to admin via CallMeBot (non-blocking)
   sendWhatsAppToAdmin(adminMsg).catch((e) => console.error("WhatsApp admin error:", e.message));
 
+  // Auto-send to customer via CallMeBot (non-blocking)
+  const customerMsg = [
+    `🌸 *Booking Confirmed! Mani's Elite Makeover Studio*`,
+    ``,
+    `Hi ${customerName}, your appointment has been confirmed!`,
+    ``,
+    `💅 *Service:* ${serviceName}`,
+    `📅 *Date:* ${serviceDate}`,
+    `⏰ *Time:* ${serviceTime}`,
+    `🏷️ *Type:* ${serviceType}`,
+    `💳 *Payment:* ${paymentType}`,
+    addressLine,
+    ``,
+    `Thank you for choosing us! See you soon. ✨`,
+  ].filter(Boolean).join("\n");
+
+  if (customerPhone && customerPhone !== "N/A") {
+    sendWhatsAppToCustomer(customerPhone, customerMsg).catch((e) => console.error("WhatsApp customer error:", e.message));
+  }
+
   console.log("\n─────────────────────────────────────────────────────");
-  console.log("📲 Admin WhatsApp dispatched for booking:", booking._id || booking.id);
+  console.log("📲 WhatsApp notifications dispatched for booking:", booking._id || booking.id);
   console.log("   Customer:", customerName, "|", customerPhone);
   console.log("   Service: ", serviceName, "@", serviceTime, serviceDate);
   console.log("─────────────────────────────────────────────────────\n");
@@ -380,5 +420,10 @@ exports.confirmUpiPayment = asyncHandler(async (req, res) => {
   await booking.save();
 
   const populated = await populateBooking(Booking.findById(booking.id));
+  try {
+    sendBookingWhatsAppNotifications(populated);
+  } catch (e) {
+    console.error("WhatsApp notification error (upi):", e.message);
+  }
   res.json({ booking: populated });
 });

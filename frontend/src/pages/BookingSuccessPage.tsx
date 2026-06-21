@@ -1,4 +1,3 @@
-import { format, parseISO } from "date-fns";
 import { CheckCircle2, Calendar, Clock, CreditCard, Home, Store, Loader2, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -171,7 +170,13 @@ export const BookingSuccessPage = () => {
                 {
                   icon: <Calendar size={15} style={{ color: "#c9a227" }} />,
                   label: "Date",
-                  value: format(parseISO(booking.starts_at), "dd MMMM yyyy"),
+                  value: (() => {
+                    const d = new Date(booking.starts_at);
+                    const day = d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit" });
+                    const month = d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", month: "long" });
+                    const year = d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", year: "numeric" });
+                    return `${day} ${month} ${year}`;
+                  })(),
                 },
                 {
                   icon: <Clock size={15} style={{ color: "#c9a227" }} />,

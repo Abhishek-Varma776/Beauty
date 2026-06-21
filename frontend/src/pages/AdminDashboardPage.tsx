@@ -187,10 +187,10 @@ export const AdminDashboardPage = () => {
                     {/* Time */}
                     <div style={{ textAlign: "center", minWidth: "70px" }}>
                       <p style={{ color: "#c9a227", fontWeight: 700, fontSize: "1.1rem", margin: "0 0 2px", fontFamily: "'Cinzel', serif" }}>
-                        {new Date(booking.starts_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(booking.starts_at).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true })}
                       </p>
                       <p style={{ color: "#444", fontSize: "0.7rem", margin: 0 }}>
-                        {new Date(booking.ends_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(booking.ends_at).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true })}
                       </p>
                     </div>
 
