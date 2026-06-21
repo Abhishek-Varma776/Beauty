@@ -112,7 +112,7 @@ exports.availableSlots = asyncHandler(async (req, res) => {
     ]
   }).select("starts_at ends_at");
 
-  const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+  const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
   const slots = hours.map((hour) => {
     const start = new Date(`${targetDate}T${String(hour).padStart(2, "0")}:00:00`);
     const end   = new Date(start.getTime() + service.duration_min * 60 * 1000);
