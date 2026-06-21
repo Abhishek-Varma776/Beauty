@@ -58,7 +58,7 @@ export const POLICIES: Record<
         heading: "📞 How to Request a Refund",
         body: (
           <p style={{ color: "#aaa", fontSize: "0.85rem", lineHeight: 1.65, margin: 0 }}>
-            Call us at <strong style={{ color: "#e8d5a3" }}>+91 96404 49896</strong> or email{" "}
+            Call us at <strong style={{ color: "#e8d5a3" }}>+91 77802 94746</strong> or email{" "}
             <strong style={{ color: "#e8d5a3" }}>maniselitepujulamakeover@gmail.com</strong> with your booking ID and reason for cancellation. Our support team will assist you within 24 hours.
           </p>
         ),
@@ -262,7 +262,7 @@ const PolicyModal = ({ type, onClose }: { type: Exclude<PolicyType, null>; onClo
           <div style={{ padding: "1rem", borderRadius: "0.875rem", background: "rgba(201,162,39,0.05)", border: "1px solid rgba(201,162,39,0.18)", marginTop: "0.5rem" }}>
             <p style={{ color: "#888", fontSize: "0.8rem", margin: "0 0 4px" }}>Questions about this policy?</p>
             <p style={{ color: "#c9a227", fontWeight: 600, fontSize: "0.85rem", margin: 0 }}>
-              📧 maniselitepujulamakeover@gmail.com &nbsp;·&nbsp; 📞 +91 96404 49896
+              📧 maniselitepujulamakeover@gmail.com &nbsp;·&nbsp; 📞 +91 77802 94746
             </p>
           </div>
         </div>
@@ -384,7 +384,7 @@ export const Footer = () => {
                   <div style={{ background: "rgba(201,162,39,0.1)", borderRadius: "50%", padding: "0.45rem", flexShrink: 0 }}>
                     <Phone size={14} style={{ color: "#c9a227" }} />
                   </div>
-                  <span style={{ color: "#aaa", fontSize: "0.875rem" }}>+91 96404 49896</span>
+                  <span style={{ color: "#aaa", fontSize: "0.875rem" }}>+91 77802 94746</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                   <div style={{ background: "rgba(201,162,39,0.1)", borderRadius: "50%", padding: "0.45rem", flexShrink: 0 }}>
@@ -429,7 +429,7 @@ export const Footer = () => {
                   </div>
                   <div>
                     <p style={{ color: "#e8d5a3", fontWeight: 600, margin: "0 0 2px", fontSize: "0.875rem" }}>Daily Service</p>
-                    <p style={{ color: "#aaa", margin: 0, fontSize: "0.8rem" }}>10:00 AM – 8:00 PM</p>
+                    <p style={{ color: "#aaa", margin: 0, fontSize: "0.8rem" }}>9:00 AM – 8:00 PM</p>
                   </div>
                 </div>
                 <div

@@ -577,7 +577,7 @@ export const LandingPage = () => {
             </h2>
             <p style={{ color: "#666" }}>
               <MapPin size={14} style={{ display: "inline", marginRight: "6px", color: "#c9a227" }} />
-              Home visits available across the city • Salon open daily 10 AM – 8 PM
+              Home visits available across the city • Salon open daily 9 AM – 8 PM
             </p>
             <a
               href="https://maps.app.goo.gl/9EW1eoq4dqvFZ9ym7?g_st=ipc"

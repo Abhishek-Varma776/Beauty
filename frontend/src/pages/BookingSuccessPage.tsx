@@ -137,7 +137,7 @@ export const BookingSuccessPage = () => {
           {verifying && (
             <div style={{ textAlign: "center", padding: "1.5rem", color: "#c9a227", fontSize: "0.875rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
               <Loader2 size={28} style={{ animation: "spin 0.8s linear infinite", color: "#c9a227" }} />
-              <span>Verifying your PhonePe payment…</span>
+              <span>Verifying your Razorpay payment…</span>
             </div>
           )}
 
@@ -188,7 +188,7 @@ export const BookingSuccessPage = () => {
                 {
                   icon: <CreditCard size={15} style={{ color: "#c9a227" }} />,
                   label: "Payment",
-                  value: `${booking.payment_type === "online" ? "Online (PhonePe)" : "Cash After Service"} — ${booking.payment_status}`,
+                  value: `${booking.payment_type === "online" ? "Online (Razorpay)" : "Cash After Service"} — ${booking.payment_status}`,
                 },
               ].map((row) => (
                 <div
@@ -236,21 +236,58 @@ export const BookingSuccessPage = () => {
           )}
 
           {/* CTA Buttons */}
-          <div style={{ display: "flex", gap: "0.875rem", marginTop: "1.75rem", flexWrap: "wrap" }}>
-            <Link
-              to="/dashboard"
-              className="btn-primary"
-              style={{ flex: 1, textDecoration: "none", textAlign: "center", justifyContent: "center" }}
-            >
-              My Bookings
-            </Link>
-            <Link
-              to="/"
-              className="btn-secondary"
-              style={{ flex: 1, textDecoration: "none", textAlign: "center", justifyContent: "center" }}
-            >
-              Back to Home
-            </Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginTop: "1.75rem" }}>
+            {/* WhatsApp Admin Notify */}
+            {booking && (() => {
+              const svcName   = booking.service?.name ?? "Service";
+              const svcDate   = booking.starts_at ? new Date(booking.starts_at).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) : "";
+              const svcTime   = booking.starts_at ? new Date(booking.starts_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "";
+              const svcType   = booking.service_type === "salon" ? "Salon Visit" : "Home Visit";
+              const payType   = booking.payment_type === "online" ? "Online (Razorpay)" : "Cash After Service";
+              const msg = encodeURIComponent(
+                `🔔 Booking Confirmed!\n\nService: ${svcName}\nDate: ${svcDate}\nTime: ${svcTime}\nType: ${svcType}\nPayment: ${payType}\nBooking ID: ${bookingId}\n\nThank you — Mani's Elite Makeover Studio`
+              );
+              return (
+                <a
+                  href={`https://wa.me/917780294746?text=${msg}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                    padding: "0.875rem", borderRadius: "0.875rem", textDecoration: "none",
+                    background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)",
+                    color: "#fff", fontWeight: 700, fontSize: "0.9rem",
+                    boxShadow: "0 4px 15px rgba(37,211,102,0.3)",
+                    transition: "transform 0.18s, box-shadow 0.18s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 25px rgba(37,211,102,0.45)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 4px 15px rgba(37,211,102,0.3)"; }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.123 1.528 5.855L.057 23.882l6.204-1.448A11.934 11.934 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.804 9.804 0 0 1-5.003-1.373l-.359-.213-3.681.859.898-3.583-.234-.372A9.79 9.79 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182 17.43 2.182 21.818 6.57 21.818 12c0 5.43-4.388 9.818-9.818 9.818z"/>
+                  </svg>
+                  Notify Admin on WhatsApp
+                </a>
+              );
+            })()}
+
+            <div style={{ display: "flex", gap: "0.875rem", flexWrap: "wrap" }}>
+              <Link
+                to="/dashboard"
+                className="btn-primary"
+                style={{ flex: 1, textDecoration: "none", textAlign: "center", justifyContent: "center" }}
+              >
+                My Bookings
+              </Link>
+              <Link
+                to="/"
+                className="btn-secondary"
+                style={{ flex: 1, textDecoration: "none", textAlign: "center", justifyContent: "center" }}
+              >
+                Back to Home
+              </Link>
+            </div>
           </div>
         </div>
       </motion.div>

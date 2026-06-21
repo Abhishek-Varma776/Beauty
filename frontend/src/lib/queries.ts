@@ -150,9 +150,9 @@ export const cancelBooking = async (bookingId: string) => {
   return normalizeBooking(response.data.booking as Booking & MongoEntity);
 };
 
-export const createOnlineOrder = async ({ bookingId, amount }: { bookingId: string; amount: number; accessToken: string }) => {
-  const response = await API.post("/bookings/payments/order", { bookingId, amount });
-  return response.data as { keyId: string; amount: number; currency: string; orderId: string; redirectUrl?: string; isSimulated: boolean };
+export const createOnlineOrder = async ({ bookingId }: { bookingId: string; amount: number; accessToken: string }) => {
+  const response = await API.post("/bookings/payments/order", { bookingId });
+  return response.data as { order_id: string; amount: number; currency: string; key_id: string };
 };
 
 export const verifyPaymentAndConfirm = async (payload: {
@@ -162,7 +162,12 @@ export const verifyPaymentAndConfirm = async (payload: {
   razorpaySignature?: string;
   accessToken?: string;
 }) => {
-  const response = await API.post("/bookings/payments/verify", payload);
+  const response = await API.post("/bookings/payments/verify", {
+    bookingId:            payload.bookingId,
+    razorpay_order_id:   payload.razorpayOrderId,
+    razorpay_payment_id: payload.razorpayPaymentId,
+    razorpay_signature:  payload.razorpaySignature,
+  });
   return normalizeBooking(response.data.booking as Booking & MongoEntity);
 };
 

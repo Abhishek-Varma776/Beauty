@@ -2,7 +2,7 @@
 export const SALON_LAT = 17.3244416;
 export const SALON_LNG = 78.5809408;
 export const SALON_NAME = "Mani's Elite Makeover Studio";
-export const SALON_UPI_ID = import.meta.env.VITE_UPI_ID || "9640449896@pthdfc";
+export const SALON_UPI_ID = import.meta.env.VITE_UPI_ID || "9490449896@pthdfc";
 
 // ─── Haversine Distance Formula (in km) ──────────────────────────────────────
 export const getDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {

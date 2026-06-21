@@ -7,13 +7,13 @@ import { BookingForm } from "../components/booking/BookingForm";
 import { useAuth } from "../context/AuthContext";
 import {
   createBooking,
+  createOnlineOrder,
+  verifyPaymentAndConfirm,
   fetchAvailableSlots,
   fetchServiceById,
-  confirmUpiPayment,
   cancelBooking,
 } from "../lib/queries";
 import {
-  openUPICheckout,
   getDistanceKm,
   getDeliveryCharge,
   getDeliveryLabel,
@@ -22,11 +22,24 @@ import {
 } from "../lib/payment";
 import type { PaymentType, Service, SlotOption } from "../types/domain";
 
+// Dynamically load the Razorpay checkout script once
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-checkout-js")) { resolve(true); return; }
+    const script = document.createElement("script");
+    script.id  = "razorpay-checkout-js";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload  = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export const BookingPage = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   // Address passed from HomeAddressPage via router state
   const addressState = location.state as {
@@ -127,6 +140,7 @@ export const BookingPage = () => {
     setErrorMessage(null);
 
     try {
+      // 1. Create a pending booking record in DB
       const booking = await createBooking({
         userId: user.id,
         service,
@@ -139,38 +153,72 @@ export const BookingPage = () => {
         addressLng: addressState?.addressLng,
       });
 
+      // 2. Cash bookings are immediately confirmed — go straight to success
       if (paymentType === "cash") {
         navigate(`/booking/success/${booking.id}`, { replace: true });
         return;
       }
 
-      // ── UPI Online Payment ──
-      const basePrice = serviceType === "home" ? (service.price_home ?? service.price) : service.price;
-      const totalAmount = basePrice + deliveryCharge;
-      const description = `${service.name} booking${deliveryCharge > 0 ? ` + ₹${deliveryCharge} home visit` : ""}`;
-
-      let paymentProof;
-      try {
-        paymentProof = await new Promise<{ upiTransactionId: string | null; screenshotFile: File | null }>((resolve, reject) => {
-          openUPICheckout({
-            amount: totalAmount,
-            description,
-            onConfirm: (upiTransactionId, screenshotFile) => resolve({ upiTransactionId, screenshotFile }),
-            onCancel: () => reject(new Error("Payment cancelled.")),
-          });
-        });
-      } catch (cancelErr) {
-        // Explicitly cancel the pending booking so the slot is freed immediately!
+      // 3. Load Razorpay checkout script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
         await cancelBooking(booking.id);
-        throw cancelErr;
+        throw new Error("Failed to load payment gateway. Please refresh and try again.");
       }
 
-      // User confirmed payment — update booking status
-      await confirmUpiPayment({
-        bookingId: booking.id,
-        upiTransactionId: paymentProof.upiTransactionId,
-        screenshotFile: paymentProof.screenshotFile,
+      // 4. Ask backend to create a Razorpay order (server computes price securely)
+      const order = await createOnlineOrder({ bookingId: booking.id, amount: 0, accessToken: "" });
+
+      // 5. Open Razorpay modal
+      await new Promise<void>((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rzp = new (window as any).Razorpay({
+          key:         import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount:      order.amount,
+          currency:    order.currency,
+          name:        "Mani's Elite Makeover Studio",
+          description: service.name,
+          order_id:    order.order_id,
+          prefill: {
+            name:    profile?.name ?? addressState?.customerName ?? "",
+            contact: user.phone,
+          },
+          theme: { color: "#c9a227" },
+          modal: {
+            // Slot is freed immediately when user closes without paying
+            ondismiss: () => {
+              cancelBooking(booking.id).catch(console.error);
+              reject(new Error("Payment cancelled. Your slot has been released."));
+            },
+          },
+          handler: async (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) => {
+            try {
+              // 6. Verify signature on backend → confirms booking
+              await verifyPaymentAndConfirm({
+                bookingId:           booking.id,
+                razorpayOrderId:     response.razorpay_order_id,
+                razorpayPaymentId:   response.razorpay_payment_id,
+                razorpaySignature:   response.razorpay_signature,
+              });
+              resolve();
+            } catch (verifyErr) {
+              reject(verifyErr);
+            }
+          },
+        });
+
+        rzp.on("payment.failed", (resp: { error: { description: string } }) => {
+          cancelBooking(booking.id).catch(console.error);
+          reject(new Error(resp.error?.description ?? "Payment failed. Please try again."));
+        });
+
+        rzp.open();
       });
+
       navigate(`/booking/success/${booking.id}`, { replace: true });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Unable to complete booking");
