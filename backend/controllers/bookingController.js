@@ -26,111 +26,91 @@ function getDeliveryCharge(distanceKm) {
   return 99;
 }
 
-// ─── WhatsApp Notification Logger ────────────────────────────────────────────
-// ─── CallMeBot: Auto-send WhatsApp to admin ─────────────────────────────────
-async function sendWhatsAppToAdmin(message) {
-  const apiKey = process.env.CALLMEBOT_API_KEY;
-  const phone  = process.env.ADMIN_WHATSAPP || "917780294746";
+// ─── WhatsApp Notifications via Baileys ──────────────────────────────────────
+const { sendWhatsAppMessage } = require("../services/whatsappService");
 
-  if (!apiKey) {
-    // API key not yet configured — log clearly so admin can set it up
-    console.log("\n⚠️  CALLMEBOT_API_KEY not set. To enable auto WhatsApp:\n"
-      + "   1. Send 'I allow callmebot to send me messages' to +34 644 38 53 73 on WhatsApp\n"
-      + "   2. You will receive an API key reply\n"
-      + "   3. Add  CALLMEBOT_API_KEY=<key>  to backend .env and Render env vars\n");
-    console.log("📲 WhatsApp (would-send) to +" + phone + ":\n" + message + "\n");
-    return;
-  }
+const SALON_ADDRESS = "Mani's Elite Makeover Studio, Hyderabad";
+const SALON_MAP_LINK = `https://maps.google.com/?q=${SALON_LAT},${SALON_LNG}`;
+const ADMIN_PHONE   = process.env.ADMIN_WHATSAPP || "917780294746";
 
-  try {
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
-    const res  = await fetch(url);
-    const body = await res.text();
-    console.log(`📲 CallMeBot WhatsApp → Admin +${phone}: ${body.trim()}`);
-  } catch (err) {
-    console.error("CallMeBot WhatsApp error:", err.message);
-  }
-}
-
-// ─── CallMeBot: Auto-send WhatsApp to customer ───────────────────────────────
-async function sendWhatsAppToCustomer(phone, message) {
-  const apiKey = process.env.CALLMEBOT_API_KEY;
-  if (!apiKey) {
-    console.log("📲 WhatsApp (would-send to customer) to +" + phone + ":\n" + message + "\n");
-    return;
-  }
-
-  // Remove any spaces/plus signs from phone number
-  const cleanPhone = phone.replace(/[^0-9]/g, "");
-  try {
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${cleanPhone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
-    const res  = await fetch(url);
-    const body = await res.text();
-    console.log(`📲 CallMeBot WhatsApp → Customer +${cleanPhone}: ${body.trim()}`);
-  } catch (err) {
-    console.error("CallMeBot WhatsApp Customer error:", err.message);
-  }
-}
-
-function sendBookingWhatsAppNotifications(booking) {
+async function sendBookingWhatsAppNotifications(booking) {
   let serviceDate = "N/A";
   let serviceTime = "N/A";
   try {
-    // Convert UTC time from DB to IST for display
     const d = new Date(booking.starts_at);
     serviceDate = d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "long", year: "numeric" });
     serviceTime = d.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true });
   } catch (_) { /* ignore */ }
 
-  const serviceName   = booking.service?.name ?? "Service";
-  const customerName  = booking.customer?.name  ?? booking.customer_name ?? "Customer";
-  const customerPhone = booking.customer?.phone  ?? "N/A";
-  const serviceType   = booking.service_type === "salon" ? "Salon Visit" : "Home Visit";
-  const paymentType   = booking.payment_type  === "online" ? "Online (Razorpay)" : "Cash After Service";
-  const addressLine   = booking.address ? `\nAddress: ${booking.address}` : "";
+  const serviceName   = booking.service?.name    ?? "Service";
+  const customerName  = booking.customer?.name   ?? booking.customer_name ?? "Customer";
+  const customerPhone = booking.customer?.phone  ?? null;
+  const serviceType   = booking.service_type;
+  const paymentLabel  = booking.payment_type === "online" ? "Online (Razorpay)" : "Cash After Service";
+  const isSalon       = serviceType === "salon";
 
+  // ── Customer map link (for salon visit) ──────────────────────────────────
+  const salonMapLine  = isSalon  ? `\n📍 *Salon Location:* ${SALON_MAP_LINK}` : "";
+
+  // ── Customer address + map link (for admin on home visit) ────────────────
+  let customerAddrLine = "";
+  if (!isSalon && booking.address) {
+    customerAddrLine = `\n🏠 *Customer Address:* ${booking.address}`;
+    if (booking.address_lat && booking.address_lng) {
+      customerAddrLine += `\n🗺️ *Map:* https://maps.google.com/?q=${booking.address_lat},${booking.address_lng}`;
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // CUSTOMER MESSAGE
+  // ────────────────────────────────────────────────────────────────────────
+  const customerMsg = [
+    `🌸 *Booking Confirmed! Mani's Elite Makeover Studio*`,
+    ``,
+    `Hi ${customerName}, your appointment is confirmed! 🎉`,
+    ``,
+    `💅 *Service:* ${serviceName}`,
+    `📅 *Date:*    ${serviceDate}`,
+    `⏰ *Time:*    ${serviceTime}`,
+    `🏷️ *Type:*    ${isSalon ? "Salon Visit" : "Home Visit"}`,
+    `💳 *Payment:* ${paymentLabel}`,
+    isSalon ? salonMapLine : "",
+    ``,
+    `Thank you for choosing us! See you soon ✨`,
+  ].filter(v => v !== undefined).join("\n");
+
+  // ────────────────────────────────────────────────────────────────────────
+  // ADMIN MESSAGE
+  // ────────────────────────────────────────────────────────────────────────
   const adminMsg = [
     `🔔 *New Booking — Mani's Elite Makeover Studio*`,
     ``,
     `💅 *Service:* ${serviceName}`,
     `👤 *Customer:* ${customerName}`,
-    `📞 *Phone:* ${customerPhone}`,
-    `📅 *Date:* ${serviceDate}`,
-    `⏰ *Time:* ${serviceTime}`,
-    `🏷️ *Type:* ${serviceType}`,
-    `💳 *Payment:* ${paymentType}`,
-    addressLine,
-    `✅ *Status:* Confirmed`,
+    `📞 *Phone:*   ${customerPhone || "N/A"}`,
+    `📅 *Date:*    ${serviceDate}`,
+    `⏰ *Time:*    ${serviceTime}`,
+    `🏷️ *Type:*    ${isSalon ? "Salon Visit" : "Home Visit"}`,
+    `💳 *Payment:* ${paymentLabel}`,
+    customerAddrLine,
+    `✅ *Status:*  Confirmed`,
   ].filter(Boolean).join("\n");
 
-  // Auto-send to admin via CallMeBot (non-blocking)
-  sendWhatsAppToAdmin(adminMsg).catch((e) => console.error("WhatsApp admin error:", e.message));
+  // ── Send both messages (non-blocking) ────────────────────────────────────
+  sendWhatsAppMessage(ADMIN_PHONE, adminMsg).catch((e) =>
+    console.error("WhatsApp admin send error:", e.message)
+  );
 
-  // Auto-send to customer via CallMeBot (non-blocking)
-  const customerMsg = [
-    `🌸 *Booking Confirmed! Mani's Elite Makeover Studio*`,
-    ``,
-    `Hi ${customerName}, your appointment has been confirmed!`,
-    ``,
-    `💅 *Service:* ${serviceName}`,
-    `📅 *Date:* ${serviceDate}`,
-    `⏰ *Time:* ${serviceTime}`,
-    `🏷️ *Type:* ${serviceType}`,
-    `💳 *Payment:* ${paymentType}`,
-    addressLine,
-    ``,
-    `Thank you for choosing us! See you soon. ✨`,
-  ].filter(Boolean).join("\n");
-
-  if (customerPhone && customerPhone !== "N/A") {
-    sendWhatsAppToCustomer(customerPhone, customerMsg).catch((e) => console.error("WhatsApp customer error:", e.message));
+  if (customerPhone) {
+    // Small delay so messages don't look bot-like
+    setTimeout(() => {
+      sendWhatsAppMessage(customerPhone, customerMsg).catch((e) =>
+        console.error("WhatsApp customer send error:", e.message)
+      );
+    }, 2000);
   }
 
-  console.log("\n─────────────────────────────────────────────────────");
-  console.log("📲 WhatsApp notifications dispatched for booking:", booking._id || booking.id);
-  console.log("   Customer:", customerName, "|", customerPhone);
-  console.log("   Service: ", serviceName, "@", serviceTime, serviceDate);
-  console.log("─────────────────────────────────────────────────────\n");
+  console.log(`\n📲 WhatsApp notifications dispatched — ${customerName} | ${serviceName} @ ${serviceTime} ${serviceDate}\n`);
 }
 
 const populateBooking = (query) => query.populate("service").populate("customer", "name phone");

@@ -6,10 +6,14 @@ const rateLimit = require("express-rate-limit");
 const path = require("path");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
+const { initWhatsApp } = require("./services/whatsappService");
 
 dotenv.config();
 
-connectDB();
+connectDB().then(() => {
+  // Start WhatsApp AFTER DB is ready (session stored in MongoDB)
+  initWhatsApp();
+});
 
 const app = express();
 
@@ -59,6 +63,7 @@ app.use("/api/services", require("./routes/serviceRoutes"));
 app.use("/api/bookings", require("./routes/bookingRoutes"));
 app.use("/api/gallery", require("./routes/galleryRoutes"));
 app.use("/api/business-hours", require("./routes/businessHourRoutes"));
+app.use("/api/whatsapp", require("./routes/whatsappRoutes"));
 
 app.use(errorHandler);
 
